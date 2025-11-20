@@ -1,5 +1,6 @@
 import React from 'react';
 
+// Auto-deployment test - this comment will trigger a build and deployment
 const Homepage = () => {
   return (
     <>
