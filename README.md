@@ -1,8 +1,10 @@
 # Vastrani Looms - Saree Business Website
 
-A modern saree business website built with React, Tailwind CSS, and PHP.
+A modern, responsive website for Vastrani Looms saree business built with React.js, Tailwind CSS, and PHP backend.
 
-## Project Structure
+**Live Website:** https://seashell-yak-534067.hostingersite.com
+
+## 🚀 Features
 
 ```
 vastrani-looms/
