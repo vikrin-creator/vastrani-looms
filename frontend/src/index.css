@@ -1,0 +1,46 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;600;700&family=Merriweather:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined');
+
+/* Custom responsive utilities for extra small screens */
+@media (max-width: 475px) {
+  .xs\:block {
+    display: block;
+  }
+  .xs\:flex {
+    display: flex;
+  }
+  .xs\:hidden {
+    display: none;
+  }
+}
+
+.decorative-frame {
+  border: 2px solid #D4AF37;
+  padding: 1rem;
+  position: relative;
+}
+
+.decorative-frame::before,
+.decorative-frame::after {
+  content: '';
+  position: absolute;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-color: #D4AF37;
+  border-style: solid;
+}
+
+.decorative-frame::before {
+  top: -2px;
+  left: -2px;
+  border-width: 2px 0 0 2px;
+}
+
+.decorative-frame::after {
+  bottom: -2px;
+  right: -2px;
+  border-width: 0 2px 2px 0;
+}
