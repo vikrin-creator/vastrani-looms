@@ -2,35 +2,36 @@ name: Deploy to Hostinger
 
 on:
   push:
-    branches: 
+    branches:
       - main
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
 
-    - name: Install dependencies
-      working-directory: ./frontend
-      run: npm ci
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
 
-    - name: Build React app
-      working-directory: ./frontend
-      run: npm run build
+      - name: Build React app
+        working-directory: ./frontend
+        run: npm run build
 
-    - name: Deploy to Hostinger via FTP
-      uses: sebastianpopp/ftp-action@releases/v2
-      with:
-        host: ${{ secrets.HOSTINGER_FTP_SERVER }}
-        user: ${{ secrets.HOSTINGER_FTP_USERNAME }}
-        password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
-        localDir: "./frontend/build/"
-        remoteDir: "/public_html/"
+      - name: Deploy to Hostinger via FTP
+        uses: SamKirkland/FTP-Deploy-Action@4.3.0
+        with:
+          server: ${{ secrets.HOSTINGER_FTP_SERVER }}
+          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+          local-dir: "./frontend/build"
+          server-dir: "/public_html"
