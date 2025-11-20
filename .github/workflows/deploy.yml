@@ -31,15 +31,14 @@ jobs:
         cd frontend
         npm run build
         
-    - name: Deploy to Hostinger via SFTP
-      uses: wlixcc/SFTP-Deploy-Action@v1.2.4
+    - name: Deploy to Hostinger via FTP
+      uses: sebastianpopp/ftp-action@releases/v2
       with:
-        server: ${{ secrets.HOSTINGER_FTP_SERVER }}
-        username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+        host: ${{ secrets.HOSTINGER_FTP_SERVER }}
+        user: ${{ secrets.HOSTINGER_FTP_USERNAME }}
         password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
-        local_path: './frontend/build/*'
-        remote_path: '/public_html/'
-        sftp_only: true
+        localDir: "./frontend/build/"
+        remoteDir: "/public_html/"
         exclude: |
           **/.git*
           **/.git*/**
