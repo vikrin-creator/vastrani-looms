@@ -24,7 +24,11 @@ const ProductDetail = () => {
       setAvgRating(reviewData.avgRating);
       setReviewCount(reviewData.reviewCount);
     } catch (error) {
-      console.error('Error fetching reviews:', error);
+      // Reviews table might not exist yet - set defaults
+      console.warn('Reviews not available:', error.message);
+      setReviews([]);
+      setAvgRating(0);
+      setReviewCount(0);
     }
   }, [id]);
 

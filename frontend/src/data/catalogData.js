@@ -258,6 +258,16 @@ export const getProductById = async (id) => {
 export const getProductReviews = async (productId) => {
   try {
     const response = await fetch(`${API_BASE_URL}/reviews.php?product_id=${productId}`);
+    
+    // If server error (reviews table doesn't exist), return empty data
+    if (!response.ok) {
+      return {
+        reviews: [],
+        avgRating: 0,
+        reviewCount: 0
+      };
+    }
+    
     const result = await response.json();
     
     if (result.success) {
@@ -267,11 +277,19 @@ export const getProductReviews = async (productId) => {
         reviewCount: result.review_count || 0
       };
     } else {
-      throw new Error(result.message || 'Failed to fetch reviews');
+      return {
+        reviews: [],
+        avgRating: 0,
+        reviewCount: 0
+      };
     }
   } catch (error) {
-    console.error('Error fetching reviews:', error);
-    throw error;
+    console.warn('Reviews API not available:', error.message);
+    return {
+      reviews: [],
+      avgRating: 0,
+      reviewCount: 0
+    };
   }
 };
 

@@ -11,8 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_once '../config/database.php';
 
-$database = new Database();
-$db = $database->getConnection();
+$db = getDB();
 
 $method = $_SERVER['REQUEST_METHOD'];
 

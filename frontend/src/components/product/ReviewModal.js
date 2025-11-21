@@ -33,6 +33,12 @@ const ReviewModal = ({ isOpen, onClose, reviews, avgRating, reviewCount, product
         })
       });
 
+      if (!response.ok) {
+        setError('Review system is not available yet. Please contact the administrator.');
+        setIsSubmitting(false);
+        return;
+      }
+
       const data = await response.json();
 
       if (data.success) {
@@ -48,7 +54,7 @@ const ReviewModal = ({ isOpen, onClose, reviews, avgRating, reviewCount, product
         setError(data.message || 'Failed to submit review');
       }
     } catch (err) {
-      setError('An error occurred while submitting your review');
+      setError('Review system is not available yet. Please try again later.');
     } finally {
       setIsSubmitting(false);
     }
