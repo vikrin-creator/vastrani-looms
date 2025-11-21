@@ -42,7 +42,7 @@ const Header = () => {
   return (
     <>
       <header className="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-secondary/30 px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-2 sm:py-3 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-sm">
-        <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+        <Link to="/" className="flex items-center gap-2 sm:gap-3 md:gap-4 hover:opacity-80 transition-opacity">
           <div className="size-10 sm:size-12 md:size-14">
             <img 
               src="/Logo_Transparent.png" 
@@ -53,7 +53,7 @@ const Header = () => {
           <h2 className="text-primary dark:text-secondary text-lg sm:text-xl md:text-2xl font-bold font-display leading-tight tracking-[-0.015em]">
             Vastrani Looms
           </h2>
-        </div>
+        </Link>
         
         <nav className="hidden md:flex flex-1 justify-center items-center gap-4 lg:gap-6 xl:gap-9">
           <Link className="text-text-light dark:text-text-dark text-xs lg:text-sm font-medium font-body leading-normal hover:text-secondary" to="/">Home</Link>

@@ -217,3 +217,39 @@ export const dataStore = {
     await initializeData();
   }
 };
+
+// Get product by ID with related products
+export const getProductById = async (id) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/products.php?id=${id}`);
+    const result = await response.json();
+    
+    if (result.success && result.data) {
+      const product = result.data;
+      
+      // Fetch related products from the same category
+      let relatedProducts = [];
+      if (product.category_id) {
+        const relatedResponse = await fetch(`${API_BASE_URL}/products.php?category=${product.category_id}`);
+        const relatedResult = await relatedResponse.json();
+        
+        if (relatedResult.success) {
+          // Filter out the current product and limit to 4 items
+          relatedProducts = relatedResult.data
+            .filter(p => p.id !== product.id)
+            .slice(0, 4);
+        }
+      }
+      
+      return {
+        product,
+        relatedProducts
+      };
+    } else {
+      throw new Error(result.message || 'Product not found');
+    }
+  } catch (error) {
+    console.error('Error fetching product:', error);
+    throw error;
+  }
+};

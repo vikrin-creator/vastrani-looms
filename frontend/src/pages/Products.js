@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 
 const Products = () => {
   const [searchParams] = useSearchParams();
@@ -206,9 +206,12 @@ const Products = () => {
                         </span>
                       )}
                     </div>
-                    <button className="bg-primary text-white dark:bg-secondary dark:text-primary px-4 py-2 rounded-lg text-sm font-bold hover:bg-primary/90 dark:hover:bg-secondary/90 transition-colors">
+                    <Link 
+                      to={`/product/${product.id}`}
+                      className="bg-primary text-white dark:bg-secondary dark:text-primary px-4 py-2 rounded-lg text-sm font-bold hover:bg-primary/90 dark:hover:bg-secondary/90 transition-colors"
+                    >
                       View Details
-                    </button>
+                    </Link>
                   </div>
                   {product.colors && product.colors.length > 0 && (
                     <div className="mt-3 flex gap-1">

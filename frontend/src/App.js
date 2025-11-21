@@ -5,6 +5,7 @@ import Footer from './components/layout/Footer';
 import Homepage from './pages/Homepage';
 import AboutUs from './pages/AboutUs';
 import Products from './pages/Products';
+import ProductDetail from './pages/ProductDetail';
 import Contact from './pages/Contact';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import './index.css';
@@ -28,6 +29,7 @@ function App() {
                       <Route path="/" element={<Homepage />} />
                       <Route path="/about" element={<AboutUs />} />
                       <Route path="/products" element={<Products />} />
+                      <Route path="/product/:id" element={<ProductDetail />} />
                       <Route path="/contact" element={<Contact />} />
                     </Routes>
                   </main>
