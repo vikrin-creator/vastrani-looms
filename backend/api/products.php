@@ -38,7 +38,53 @@ try {
     
     switch ($method) {
         case 'GET':
-            // Get filter parameters
+            // Check if requesting single product by ID
+            $productId = isset($_GET['id']) ? intval($_GET['id']) : null;
+            
+            if ($productId) {
+                // Fetch single product
+                $sql = "SELECT p.*, 
+                        c.name as category_name, c.slug as category_slug,
+                        col.name as collection_name, col.slug as collection_slug
+                        FROM products p
+                        LEFT JOIN categories c ON p.category_id = c.id
+                        LEFT JOIN collections col ON p.collection_id = col.id
+                        WHERE p.id = ?";
+                
+                $stmt = $db->prepare($sql);
+                $stmt->execute([$productId]);
+                $product = $stmt->fetch();
+                
+                if (!$product) {
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Product not found'
+                    ]);
+                    break;
+                }
+                
+                // Get colors
+                $colorStmt = $db->prepare("SELECT id, product_id, color_name as name, color_code as code, stock FROM product_colors WHERE product_id = ?");
+                $colorStmt->execute([$productId]);
+                $product['colors'] = $colorStmt->fetchAll();
+                
+                // Get images
+                $imageStmt = $db->prepare("SELECT id, product_id, image_url as url, alt_text, display_order, is_primary FROM product_images WHERE product_id = ? ORDER BY display_order ASC");
+                $imageStmt->execute([$productId]);
+                $product['images'] = $imageStmt->fetchAll();
+                
+                // Convert boolean values
+                $product['enabled'] = (bool)$product['enabled'];
+                $product['featured'] = (bool)$product['featured'];
+                
+                echo json_encode([
+                    'success' => true,
+                    'data' => $product
+                ]);
+                break;
+            }
+            
+            // Get filter parameters for listing products
             $categoryId = isset($_GET['category_id']) ? intval($_GET['category_id']) : null;
             $collectionId = isset($_GET['collection_id']) ? intval($_GET['collection_id']) : null;
             $categoryName = isset($_GET['category']) ? $_GET['category'] : null;

@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import Header from '../components/layout/Header';
-import Footer from '../components/layout/Footer';
 import { getProductById } from '../data/catalogData';
 
 const ProductDetail = () => {
@@ -11,19 +9,31 @@ const ProductDetail = () => {
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedColor, setSelectedColor] = useState(null);
-  const [quantity, setQuantity] = useState(1);
+  const [detailsOpen, setDetailsOpen] = useState(true);
+  const [shippingOpen, setShippingOpen] = useState(false);
 
   useEffect(() => {
     const fetchProductData = async () => {
       try {
         setLoading(true);
         const data = await getProductById(id);
-        setProduct(data.product);
+        console.log('Fetched product data:', data);
+        
+        // Handle if product is returned as array (take first item)
+        const productData = Array.isArray(data.product) ? data.product[0] : data.product;
+        
+        console.log('Product:', productData);
+        console.log('Product name:', productData?.name);
+        console.log('Product description:', productData?.description);
+        console.log('Product images:', productData?.images);
+        console.log('Related products:', data.relatedProducts);
+        
+        setProduct(productData);
         setRelatedProducts(data.relatedProducts || []);
         
         // Set default selected color to first available color
-        if (data.product.colors && data.product.colors.length > 0) {
-          setSelectedColor(data.product.colors[0]);
+        if (productData?.colors && productData.colors.length > 0) {
+          setSelectedColor(productData.colors[0]);
         }
       } catch (error) {
         console.error('Error fetching product:', error);
@@ -37,7 +47,7 @@ const ProductDetail = () => {
 
   const handleAddToCart = () => {
     // TODO: Implement add to cart functionality
-    console.log('Add to cart:', { product, selectedColor, quantity });
+    console.log('Add to cart:', { product, selectedColor });
   };
 
   const handleAddToWishlist = () => {
@@ -47,248 +57,187 @@ const ProductDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-beige">
-        <Header />
-        <div className="flex items-center justify-center h-96">
-          <div className="text-xl text-maroon font-crimson">Loading...</div>
-        </div>
-        <Footer />
+      <div className="flex items-center justify-center h-96">
+        <div className="text-xl text-primary font-display">Loading...</div>
       </div>
     );
   }
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-beige">
-        <Header />
-        <div className="flex items-center justify-center h-96">
-          <div className="text-xl text-maroon font-crimson">Product not found</div>
-        </div>
-        <Footer />
+      <div className="flex items-center justify-center h-96">
+        <div className="text-xl text-primary font-display">Product not found</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-beige">
-      <Header />
-      
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Breadcrumb */}
-        <nav className="mb-6 text-sm font-merriweather">
-          <Link to="/" className="text-maroon hover:text-gold transition-colors">Home</Link>
-          <span className="mx-2 text-maroon">/</span>
-          <Link to="/products" className="text-maroon hover:text-gold transition-colors">Products</Link>
-          <span className="mx-2 text-maroon">/</span>
-          <span className="text-gray-600">{product.name}</span>
-        </nav>
-
-        {/* Product Details Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-          {/* Image Gallery */}
-          <div className="space-y-4">
-            {/* Main Image */}
-            <div className="aspect-square bg-white rounded-lg overflow-hidden border-2 border-maroon shadow-lg">
-              <img
-                src={product.images && product.images[selectedImage] ? product.images[selectedImage].url : '/placeholder.jpg'}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
-            </div>
-
-            {/* Thumbnail Gallery */}
-            {product.images && product.images.length > 1 && (
-              <div className="grid grid-cols-4 gap-2">
-                {product.images.map((image, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedImage(index)}
-                    className={`aspect-square bg-white rounded-lg overflow-hidden border-2 transition-all ${
-                      selectedImage === index ? 'border-gold shadow-md' : 'border-maroon/30 hover:border-maroon'
-                    }`}
-                  >
-                    <img
-                      src={image.url}
-                      alt={`${product.name} - ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
+        {/* Image Gallery */}
+        <div className="flex flex-col gap-4">
+          <div className="w-full overflow-hidden rounded-lg shadow-lg">
+            <img
+              alt={product.name}
+              className="w-full h-full object-cover aspect-[7/6] hover:scale-105 transition-transform duration-500 cursor-zoom-in"
+              src={product.images && product.images[selectedImage] ? `https://seashell-yak-534067.hostingersite.com/${product.images[selectedImage].url}` : '/placeholder.jpg'}
+            />
           </div>
-
-          {/* Product Info */}
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-4xl font-crimson font-bold text-maroon mb-2">
-                {product.name}
-              </h1>
-              <div className="flex items-center space-x-4 mb-4">
-                <div className="flex items-center">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <span key={star} className="material-symbols-outlined text-gold text-xl">
-                      star
-                    </span>
-                  ))}
-                  <span className="ml-2 text-sm text-gray-600 font-merriweather">(4.8)</span>
-                </div>
-              </div>
-              <p className="text-3xl font-crimson font-bold text-maroon mb-4">
-                ₹{parseFloat(product.price).toLocaleString('en-IN')}
-              </p>
-            </div>
-
-            <div className="border-t border-maroon/20 pt-6">
-              <p className="text-gray-700 font-merriweather leading-relaxed">
-                {product.description}
-              </p>
-            </div>
-
-            {/* Fabric Info */}
-            {product.fabric && (
-              <div className="border-t border-maroon/20 pt-6">
-                <h3 className="text-lg font-crimson font-semibold text-maroon mb-2">Fabric</h3>
-                <p className="text-gray-700 font-merriweather">{product.fabric}</p>
-              </div>
-            )}
-
-            {/* Colors */}
-            {product.colors && product.colors.length > 0 && (
-              <div className="border-t border-maroon/20 pt-6">
-                <h3 className="text-lg font-crimson font-semibold text-maroon mb-3">
-                  Available Colors
-                </h3>
-                <div className="flex flex-wrap gap-3">
-                  {product.colors.map((color, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedColor(color)}
-                      className={`group relative`}
-                      title={color.name}
-                    >
-                      <div
-                        className={`w-10 h-10 rounded-full border-2 transition-all ${
-                          selectedColor?.code === color.code
-                            ? 'border-gold shadow-md scale-110'
-                            : 'border-maroon/30 hover:border-maroon hover:scale-105'
-                        }`}
-                        style={{ backgroundColor: color.code }}
-                      />
-                      <span className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-gray-600 font-merriweather whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-                        {color.name}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Quantity Selector */}
-            <div className="border-t border-maroon/20 pt-6">
-              <h3 className="text-lg font-crimson font-semibold text-maroon mb-3">Quantity</h3>
-              <div className="flex items-center space-x-4">
-                <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-10 h-10 rounded-full border-2 border-maroon text-maroon hover:bg-maroon hover:text-white transition-colors flex items-center justify-center"
+          {product.images && product.images.length > 1 && (
+            <div className="grid grid-cols-4 gap-4">
+              {product.images.map((image, index) => (
+                <div
+                  key={index}
+                  onClick={() => setSelectedImage(index)}
+                  className={`w-full overflow-hidden rounded-md cursor-pointer transition-all ${
+                    selectedImage === index ? 'border-2 border-primary ring-2 ring-primary ring-offset-2' : 'border-2 border-transparent hover:border-primary/50'
+                  }`}
                 >
-                  <span className="material-symbols-outlined">remove</span>
-                </button>
-                <span className="text-xl font-merriweather w-12 text-center">{quantity}</span>
-                <button
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="w-10 h-10 rounded-full border-2 border-maroon text-maroon hover:bg-maroon hover:text-white transition-colors flex items-center justify-center"
-                >
-                  <span className="material-symbols-outlined">add</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-4 pt-6">
-              <button
-                onClick={handleAddToCart}
-                className="flex-1 bg-maroon text-white py-3 px-6 rounded-lg font-crimson text-lg hover:bg-maroon/90 transition-colors flex items-center justify-center space-x-2"
-              >
-                <span className="material-symbols-outlined">shopping_cart</span>
-                <span>Add to Cart</span>
-              </button>
-              <button
-                onClick={handleAddToWishlist}
-                className="w-14 h-14 border-2 border-maroon text-maroon hover:bg-maroon hover:text-white transition-colors rounded-lg flex items-center justify-center"
-              >
-                <span className="material-symbols-outlined">favorite</span>
-              </button>
-            </div>
-
-            {/* Collapsible Details */}
-            <div className="border-t border-maroon/20 pt-6 space-y-4">
-              <details className="group">
-                <summary className="flex justify-between items-center cursor-pointer list-none font-crimson text-lg text-maroon">
-                  <span>Product Details</span>
-                  <span className="material-symbols-outlined group-open:rotate-180 transition-transform">
-                    expand_more
-                  </span>
-                </summary>
-                <div className="mt-4 text-gray-700 font-merriweather space-y-2">
-                  <p><strong>Category:</strong> {product.category_name || 'N/A'}</p>
-                  <p><strong>Collection:</strong> {product.collection_name || 'N/A'}</p>
-                  {product.fabric && <p><strong>Fabric:</strong> {product.fabric}</p>}
-                  <p><strong>SKU:</strong> {product.sku}</p>
+                  <img
+                    alt={`${product.name} - ${index + 1}`}
+                    className="w-full h-full object-cover aspect-square"
+                    src={`https://seashell-yak-534067.hostingersite.com/${image.url}`}
+                  />
                 </div>
-              </details>
-
-              <details className="group">
-                <summary className="flex justify-between items-center cursor-pointer list-none font-crimson text-lg text-maroon">
-                  <span>Shipping & Returns</span>
-                  <span className="material-symbols-outlined group-open:rotate-180 transition-transform">
-                    expand_more
-                  </span>
-                </summary>
-                <div className="mt-4 text-gray-700 font-merriweather space-y-2">
-                  <p>Free shipping on orders above ₹5000</p>
-                  <p>Easy returns within 7 days of delivery</p>
-                  <p>Delivery in 5-7 business days</p>
-                </div>
-              </details>
-            </div>
-          </div>
-        </div>
-
-        {/* Related Products */}
-        {relatedProducts.length > 0 && (
-          <div className="border-t border-maroon/20 pt-12">
-            <h2 className="text-3xl font-crimson font-bold text-maroon mb-8">You May Also Like</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {relatedProducts.slice(0, 4).map((relatedProduct) => (
-                <Link
-                  key={relatedProduct.id}
-                  to={`/product/${relatedProduct.id}`}
-                  className="group bg-white rounded-lg overflow-hidden border-2 border-maroon/20 hover:border-gold hover:shadow-lg transition-all"
-                >
-                  <div className="aspect-square overflow-hidden">
-                    <img
-                      src={relatedProduct.images && relatedProduct.images[0] ? relatedProduct.images[0].url : '/placeholder.jpg'}
-                      alt={relatedProduct.name}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                    />
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-crimson text-lg text-maroon mb-2 line-clamp-1">
-                      {relatedProduct.name}
-                    </h3>
-                    <p className="text-xl font-crimson font-bold text-maroon">
-                      ₹{parseFloat(relatedProduct.price).toLocaleString('en-IN')}
-                    </p>
-                  </div>
-                </Link>
               ))}
             </div>
-          </div>
-        )}
-      </main>
+          )}
+        </div>
 
-      <Footer />
+        {/* Product Info */}
+        <div className="flex flex-col py-4">
+          <h1 className="text-3xl md:text-4xl font-display font-bold leading-tight text-text-light dark:text-text-dark">
+            {product.name}
+          </h1>
+          <p className="mt-4 text-lg font-body leading-relaxed">
+            {product.description}
+          </p>
+          <div className="mt-4">
+            <span className="text-3xl font-display font-bold text-primary">
+              ₹{parseFloat(product.price).toLocaleString('en-IN')}
+            </span>
+            {product.sale_price && (
+              <span className="ml-3 text-xl text-gray-500 line-through">
+                ₹{parseFloat(product.sale_price).toLocaleString('en-IN')}
+              </span>
+            )}
+          </div>
+
+          {/* Rating */}
+          <div className="flex items-center gap-2 mt-4">
+            <div className="flex text-secondary">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <span key={star} className="material-symbols-outlined text-xl">star</span>
+              ))}
+            </div>
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">(4.8)</span>
+          </div>
+
+          {/* Colors */}
+          {product.colors && product.colors.length > 0 && (
+            <div className="mt-6">
+              <p className="text-sm font-bold font-body mb-2">
+                Color: {selectedColor ? selectedColor.name : ''}
+              </p>
+              <div className="flex items-center gap-3">
+                {product.colors.map((color, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedColor(color)}
+                    className={`w-8 h-8 rounded-full border-2 ${
+                      selectedColor?.code === color.code
+                        ? 'border-primary ring-2 ring-offset-2 ring-offset-background-light dark:ring-offset-background-dark ring-primary'
+                        : 'border-transparent hover:border-primary/50'
+                    }`}
+                    style={{ backgroundColor: color.code }}
+                    title={color.name}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 mt-8">
+            <button
+              onClick={handleAddToCart}
+              className="flex-1 flex items-center justify-center gap-2 h-12 px-6 rounded-lg bg-primary text-white font-bold text-base tracking-wide hover:bg-primary/90 transition-colors shadow-md"
+            >
+              <span className="material-symbols-outlined">shopping_cart</span>
+              Add to Cart
+            </button>
+            <button
+              onClick={handleAddToWishlist}
+              className="flex items-center justify-center h-12 w-12 rounded-lg bg-black/5 dark:bg-white/10 text-primary hover:bg-black/10 dark:hover:bg-white/20 transition-colors"
+            >
+              <span className="material-symbols-outlined">favorite_border</span>
+            </button>
+          </div>
+
+          {/* Details Section */}
+          <div className="border-t border-black/10 dark:border-white/10 mt-8 pt-6">
+            <details className="group" open={detailsOpen} onToggle={(e) => setDetailsOpen(e.target.open)}>
+              <summary className="flex justify-between items-center cursor-pointer list-none">
+                <span className="font-bold text-lg font-display">Details</span>
+                <span className="transition-transform duration-300 group-open:rotate-180">
+                  <span className="material-symbols-outlined">expand_more</span>
+                </span>
+              </summary>
+              <ul className="mt-4 space-y-2 pl-2 text-sm list-disc list-inside font-body">
+                {product.fabric && <li>Fabric: {product.fabric}</li>}
+                {product.category_name && <li>Category: {product.category_name}</li>}
+                {product.collection_name && <li>Collection: {product.collection_name}</li>}
+                <li>Care: Dry Clean Only</li>
+              </ul>
+            </details>
+            <hr className="my-4 border-black/10 dark:border-white/10" />
+            <details className="group" open={shippingOpen} onToggle={(e) => setShippingOpen(e.target.open)}>
+              <summary className="flex justify-between items-center cursor-pointer list-none">
+                <span className="font-bold text-lg font-display">Shipping &amp; Returns</span>
+                <span className="transition-transform duration-300 group-open:rotate-180">
+                  <span className="material-symbols-outlined">expand_more</span>
+                </span>
+              </summary>
+              <p className="mt-4 text-sm leading-relaxed font-body">
+                Free shipping on orders above ₹5000. Eligible for returns within 7 days of delivery.
+              </p>
+            </details>
+          </div>
+        </div>
+      </div>
+
+      {/* Related Products Section */}
+      <section className="py-16 mt-16 bg-primary/5 dark:bg-primary/10 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+        <h2 className="text-3xl font-display font-bold text-center mb-8">Related Products</h2>
+        {relatedProducts.length > 0 ? (
+          <div className="flex overflow-x-auto pb-4 gap-6 [-ms-scrollbar-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {relatedProducts.map((relatedProduct) => (
+              <Link
+                key={relatedProduct.id}
+                to={`/product/${relatedProduct.id}`}
+                className="flex h-full flex-col gap-3 rounded-lg min-w-64 flex-shrink-0"
+              >
+                <div
+                  className="w-full bg-cover bg-center rounded-lg shadow-md overflow-hidden"
+                  style={{
+                    backgroundImage: `url('${relatedProduct.images && relatedProduct.images[0] ? `https://seashell-yak-534067.hostingersite.com/${relatedProduct.images[0].url}` : '/placeholder.jpg'}')`
+                  }}
+                >
+                  <div className="w-full aspect-[4/5]"></div>
+                </div>
+                <div>
+                  <p className="font-display font-bold">{relatedProduct.name}</p>
+                  <p className="text-sm text-primary font-medium">
+                    ₹{parseFloat(relatedProduct.price).toLocaleString('en-IN')}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <p className="text-center text-gray-600 font-body">No related products available.</p>
+        )}
+      </section>
     </div>
   );
 };
