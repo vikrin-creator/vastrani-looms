@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 
 const OfferBanner = () => {
+  // eslint-disable-next-line no-unused-vars
   const [banners, setBanners] = useState([]);
+  // eslint-disable-next-line no-unused-vars
   const [isModalOpen, setIsModalOpen] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [formData, setFormData] = useState({
     title: '',
     description: '',

@@ -22,6 +22,7 @@ const OrderManagement = () => {
     },
   ]);
 
+  // eslint-disable-next-line no-unused-vars
   const [selectedOrder, setSelectedOrder] = useState(null);
 
   const statusColors = {

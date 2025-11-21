@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
 const Shipping = () => {
+  // eslint-disable-next-line no-unused-vars
   const [shippingZones, setShippingZones] = useState([
     { id: 1, zone: 'Local (Within City)', rate: 50, days: '2-3 days' },
     { id: 2, zone: 'Regional (Within State)', rate: 100, days: '3-5 days' },

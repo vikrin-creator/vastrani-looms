@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 
 const Testimonials = () => {
+  // eslint-disable-next-line no-unused-vars
   const [testimonials, setTestimonials] = useState([]);
+  // eslint-disable-next-line no-unused-vars
   const [isModalOpen, setIsModalOpen] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [formData, setFormData] = useState({
     name: '',
     location: '',
