@@ -119,7 +119,7 @@ try {
             // Validate required fields
             if (empty($data['name']) || empty($data['price']) || empty($data['category_id'])) {
                 http_response_code(400);
-                echo json_encode(['success' => false, 'message' => 'Missing required fields']);
+                echo json_encode(['success' => false, 'message' => 'Missing required fields: name, price, category_id']);
                 exit;
             }
             
@@ -133,26 +133,52 @@ try {
                 $enabled = isset($data['enabled']) ? (int)$data['enabled'] : 1;
                 $featured = isset($data['featured']) ? (int)$data['featured'] : 0;
                 
-                // Insert product
-                $sql = "INSERT INTO products (name, slug, sku, description, price, sale_price, stock, 
-                        category_id, collection_id, fabric, enabled, featured) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                // Check if fabric column exists
+                $checkColumn = $db->query("SHOW COLUMNS FROM products LIKE 'fabric'");
+                $hasFabricColumn = $checkColumn->rowCount() > 0;
+                
+                // Insert product - conditionally include fabric
+                if ($hasFabricColumn) {
+                    $sql = "INSERT INTO products (name, slug, sku, description, price, sale_price, stock, 
+                            category_id, collection_id, fabric, enabled, featured) 
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    
+                    $params = [
+                        $data['name'],
+                        $slug,
+                        $sku,
+                        $data['description'] ?? null,
+                        $data['price'],
+                        $data['sale_price'] ?? null,
+                        $data['stock'] ?? 0,
+                        $data['category_id'],
+                        $data['collection_id'] ?? null,
+                        $data['fabric'] ?? null,
+                        $enabled,
+                        $featured
+                    ];
+                } else {
+                    $sql = "INSERT INTO products (name, slug, sku, description, price, sale_price, stock, 
+                            category_id, collection_id, enabled, featured) 
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    
+                    $params = [
+                        $data['name'],
+                        $slug,
+                        $sku,
+                        $data['description'] ?? null,
+                        $data['price'],
+                        $data['sale_price'] ?? null,
+                        $data['stock'] ?? 0,
+                        $data['category_id'],
+                        $data['collection_id'] ?? null,
+                        $enabled,
+                        $featured
+                    ];
+                }
                 
                 $stmt = $db->prepare($sql);
-                $stmt->execute([
-                    $data['name'],
-                    $slug,
-                    $sku,
-                    $data['description'] ?? null,
-                    $data['price'],
-                    $data['sale_price'] ?? null,
-                    $data['stock'] ?? 0,
-                    $data['category_id'],
-                    $data['collection_id'] ?? null,
-                    $data['fabric'] ?? null,
-                    $enabled,
-                    $featured
-                ]);
+                $stmt->execute($params);
                 
                 $productId = $db->lastInsertId();
                 
@@ -236,30 +262,60 @@ try {
                 $enabled = isset($data['enabled']) ? (int)$data['enabled'] : 1;
                 $featured = isset($data['featured']) ? (int)$data['featured'] : 0;
                 
-                // Update product
-                $sql = "UPDATE products SET 
-                        name = ?, slug = ?, sku = ?, description = ?, 
-                        price = ?, sale_price = ?, stock = ?, 
-                        category_id = ?, collection_id = ?, fabric = ?,
-                        enabled = ?, featured = ?
-                        WHERE id = ?";
+                // Check if fabric column exists
+                $checkColumn = $db->query("SHOW COLUMNS FROM products LIKE 'fabric'");
+                $hasFabricColumn = $checkColumn->rowCount() > 0;
+                
+                // Update product - conditionally include fabric
+                if ($hasFabricColumn) {
+                    $sql = "UPDATE products SET 
+                            name = ?, slug = ?, sku = ?, description = ?, 
+                            price = ?, sale_price = ?, stock = ?, 
+                            category_id = ?, collection_id = ?, fabric = ?,
+                            enabled = ?, featured = ?
+                            WHERE id = ?";
+                    
+                    $params = [
+                        $data['name'],
+                        $slug,
+                        $sku,
+                        $data['description'] ?? null,
+                        $data['price'],
+                        $data['sale_price'] ?? null,
+                        $data['stock'] ?? 0,
+                        $data['category_id'],
+                        $data['collection_id'] ?? null,
+                        $data['fabric'] ?? null,
+                        $enabled,
+                        $featured,
+                        $data['id']
+                    ];
+                } else {
+                    $sql = "UPDATE products SET 
+                            name = ?, slug = ?, sku = ?, description = ?, 
+                            price = ?, sale_price = ?, stock = ?, 
+                            category_id = ?, collection_id = ?,
+                            enabled = ?, featured = ?
+                            WHERE id = ?";
+                    
+                    $params = [
+                        $data['name'],
+                        $slug,
+                        $sku,
+                        $data['description'] ?? null,
+                        $data['price'],
+                        $data['sale_price'] ?? null,
+                        $data['stock'] ?? 0,
+                        $data['category_id'],
+                        $data['collection_id'] ?? null,
+                        $enabled,
+                        $featured,
+                        $data['id']
+                    ];
+                }
                 
                 $stmt = $db->prepare($sql);
-                $stmt->execute([
-                    $data['name'],
-                    $slug,
-                    $sku,
-                    $data['description'] ?? null,
-                    $data['price'],
-                    $data['sale_price'] ?? null,
-                    $data['stock'] ?? 0,
-                    $data['category_id'],
-                    $data['collection_id'] ?? null,
-                    $data['fabric'] ?? null,
-                    $enabled,
-                    $featured,
-                    $data['id']
-                ]);
+                $stmt->execute($params);
                 
                 // Update images - get old images first to delete physical files
                 if (isset($data['images'])) {
@@ -369,11 +425,21 @@ try {
 
 } catch (PDOException $e) {
     error_log("Database Error: " . $e->getMessage());
+    error_log("Stack trace: " . $e->getTraceAsString());
     http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Database error occurred']);
+    echo json_encode([
+        'success' => false, 
+        'message' => 'Database error occurred',
+        'error' => $e->getMessage() // Include error for debugging
+    ]);
 } catch (Exception $e) {
     error_log("Error: " . $e->getMessage());
+    error_log("Stack trace: " . $e->getTraceAsString());
     http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'An error occurred']);
+    echo json_encode([
+        'success' => false, 
+        'message' => 'An error occurred',
+        'error' => $e->getMessage() // Include error for debugging
+    ]);
 }
 ?>
