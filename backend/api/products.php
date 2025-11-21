@@ -45,15 +45,11 @@ try {
                 // Fetch single product
                 $sql = "SELECT p.*, 
                         c.name as category_name, c.slug as category_slug,
-                        col.name as collection_name, col.slug as collection_slug,
-                        COALESCE(AVG(r.rating), 0) as avg_rating,
-                        COUNT(r.id) as review_count
+                        col.name as collection_name, col.slug as collection_slug
                         FROM products p
                         LEFT JOIN categories c ON p.category_id = c.id
                         LEFT JOIN collections col ON p.collection_id = col.id
-                        LEFT JOIN reviews r ON p.id = r.product_id
-                        WHERE p.id = ?
-                        GROUP BY p.id";
+                        WHERE p.id = ?";
                 
                 $stmt = $db->prepare($sql);
                 $stmt->execute([$productId]);
@@ -81,10 +77,6 @@ try {
                 $product['enabled'] = (bool)$product['enabled'];
                 $product['featured'] = (bool)$product['featured'];
                 
-                // Format rating values
-                $product['avg_rating'] = round(floatval($product['avg_rating']), 1);
-                $product['review_count'] = intval($product['review_count']);
-                
                 echo json_encode([
                     'success' => true,
                     'data' => $product
@@ -102,13 +94,10 @@ try {
             // Build query based on filters
             $sql = "SELECT p.*, 
                     c.name as category_name, c.slug as category_slug,
-                    col.name as collection_name, col.slug as collection_slug,
-                    COALESCE(AVG(r.rating), 0) as avg_rating,
-                    COUNT(DISTINCT r.id) as review_count
+                    col.name as collection_name, col.slug as collection_slug
                     FROM products p
                     LEFT JOIN categories c ON p.category_id = c.id
-                    LEFT JOIN collections col ON p.collection_id = col.id
-                    LEFT JOIN reviews r ON p.id = r.product_id";
+                    LEFT JOIN collections col ON p.collection_id = col.id";
             
             $where = [];
             $params = [];
@@ -140,7 +129,7 @@ try {
                 $sql .= " WHERE " . implode(" AND ", $where);
             }
             
-            $sql .= " GROUP BY p.id ORDER BY p.featured DESC, p.created_at DESC";
+            $sql .= " ORDER BY p.featured DESC, p.created_at DESC";
             
             $stmt = $db->prepare($sql);
             $stmt->execute($params);
@@ -148,9 +137,6 @@ try {
             
             // Fetch product colors and images for each product
             foreach ($products as &$product) {
-                // Format rating values
-                $product['avg_rating'] = round(floatval($product['avg_rating']), 1);
-                $product['review_count'] = intval($product['review_count']);
                 
                 // Get colors - map column names to match frontend expectations
                 $colorStmt = $db->prepare("SELECT id, product_id, color_name as name, color_code as code, stock FROM product_colors WHERE product_id = ?");
