@@ -1,7 +1,7 @@
 // Centralized data store for categories and collections
 // Now connected to backend API for persistent storage
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost/backend/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://seashell-yak-534067.hostingersite.com/backend/api';
 
 // State management
 let categories = [];
