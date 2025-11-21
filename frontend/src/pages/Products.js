@@ -5,6 +5,7 @@ const Products = () => {
   const [searchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [fabrics, setFabrics] = useState([]);
   const [selectedFabric, setSelectedFabric] = useState('all');
   const [selectedColor, setSelectedColor] = useState('all');
   const [sortBy, setSortBy] = useState('featured');
@@ -13,6 +14,22 @@ const Products = () => {
   const collectionParam = searchParams.get('collection');
   
   const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://seashell-yak-534067.hostingersite.com/backend/api';
+
+  // Fetch fabrics on mount
+  useEffect(() => {
+    const fetchFabrics = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/fabrics.php`);
+        const result = await response.json();
+        if (result.success) {
+          setFabrics(result.data || []);
+        }
+      } catch (error) {
+        console.error('Error fetching fabrics:', error);
+      }
+    };
+    fetchFabrics();
+  }, [API_BASE_URL]);
 
   // Fetch products on mount and when filters change
   useEffect(() => {
@@ -119,12 +136,9 @@ const Products = () => {
             className="px-4 py-2 border border-secondary/30 rounded-lg bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-body font-semibold focus:ring-2 focus:ring-secondary focus:border-transparent min-w-[160px]"
           >
             <option value="all">Fabric</option>
-            <option value="silk">Silk</option>
-            <option value="cotton">Cotton</option>
-            <option value="linen">Linen</option>
-            <option value="organza">Organza</option>
-            <option value="tussar">Tussar</option>
-            <option value="chanderi">Chanderi</option>
+            {fabrics.map((fabric) => (
+              <option key={fabric} value={fabric.toLowerCase()}>{fabric}</option>
+            ))}
           </select>
 
           {/* Color Filter */}
@@ -178,7 +192,7 @@ const Products = () => {
                   className="bg-cover bg-center aspect-[4/3] transition-transform duration-300 group-hover:scale-105" 
                   style={{ 
                     backgroundImage: product.images && product.images.length > 0 
-                      ? `url('https://seashell-yak-534067.hostingersite.com/${product.images[0].url.replace('backend/', '')}')` 
+                      ? `url('https://seashell-yak-534067.hostingersite.com/${product.images[0].url}')` 
                       : 'linear-gradient(135deg, #F5E6D3 0%, #D4AF37 100%)'
                   }}
                 ></div>

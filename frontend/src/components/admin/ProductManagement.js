@@ -11,6 +11,7 @@ const ProductManagement = () => {
   const [editingProduct, setEditingProduct] = useState(null);
   const [categories, setCategories] = useState([]);
   const [collections, setCollections] = useState([]);
+  const [fabrics, setFabrics] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -70,15 +71,31 @@ const ProductManagement = () => {
     }
   };
 
-  // Load categories and collections on mount
+  // Load categories, collections and fabrics on mount
   useEffect(() => {
     const updateData = () => {
       setCategories(dataStore.getAllCategories());
       setCollections(dataStore.getAllCollections());
     };
     
+    const fetchFabrics = async () => {
+      try {
+        console.log('Fetching fabrics from:', `${API_BASE_URL}/fabrics.php`);
+        const response = await fetch(`${API_BASE_URL}/fabrics.php`);
+        const result = await response.json();
+        console.log('Fabrics response:', result);
+        if (result.success) {
+          setFabrics(result.data || []);
+          console.log('Fabrics set:', result.data);
+        }
+      } catch (error) {
+        console.error('Error fetching fabrics:', error);
+      }
+    };
+    
     updateData();
     fetchProducts();
+    fetchFabrics();
     
     const unsubscribe = dataStore.subscribe(updateData);
     
@@ -455,6 +472,24 @@ const ProductManagement = () => {
                     ))}
                   </select>
                 </div>
+              </div>
+
+              {/* Fabric Dropdown */}
+              <div>
+                <label className="block text-sm font-body font-semibold text-text-light dark:text-text-dark mb-2">
+                  Fabric *
+                </label>
+                <select
+                  required
+                  value={formData.fabric}
+                  onChange={(e) => setFormData({ ...formData, fabric: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary dark:focus:ring-secondary focus:border-transparent bg-white dark:bg-gray-700 text-text-light dark:text-text-dark"
+                >
+                  <option value="">Select Fabric</option>
+                  {fabrics.map((fabric) => (
+                    <option key={fabric} value={fabric}>{fabric}</option>
+                  ))}
+                </select>
               </div>
 
               {/* Color Management */}
