@@ -253,3 +253,123 @@ export const getProductById = async (id) => {
     throw error;
   }
 };
+
+// Get reviews for a product
+export const getProductReviews = async (productId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/reviews.php?product_id=${productId}`);
+    const result = await response.json();
+    
+    if (result.success) {
+      return {
+        reviews: result.reviews || [],
+        avgRating: result.avg_rating || 0,
+        reviewCount: result.review_count || 0
+      };
+    } else {
+      throw new Error(result.message || 'Failed to fetch reviews');
+    }
+  } catch (error) {
+    console.error('Error fetching reviews:', error);
+    throw error;
+  }
+};
+
+// Submit a new review
+export const submitReview = async (productId, reviewerName, rating, comment) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/reviews.php`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        product_id: productId,
+        reviewer_name: reviewerName,
+        rating: rating,
+        comment: comment
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      return result;
+    } else {
+      throw new Error(result.message || 'Failed to submit review');
+    }
+  } catch (error) {
+    console.error('Error submitting review:', error);
+    throw error;
+  }
+};
+
+// Get all reviews (for admin)
+export const getAllReviews = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/reviews.php`);
+    const result = await response.json();
+    
+    if (result.success) {
+      return result.reviews || [];
+    } else {
+      throw new Error(result.message || 'Failed to fetch reviews');
+    }
+  } catch (error) {
+    console.error('Error fetching all reviews:', error);
+    throw error;
+  }
+};
+
+// Update a review (admin only)
+export const updateReview = async (reviewId, updates) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/reviews.php`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        id: reviewId,
+        ...updates
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      return result;
+    } else {
+      throw new Error(result.message || 'Failed to update review');
+    }
+  } catch (error) {
+    console.error('Error updating review:', error);
+    throw error;
+  }
+};
+
+// Delete a review (admin only)
+export const deleteReview = async (reviewId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/reviews.php`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        id: reviewId
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      return result;
+    } else {
+      throw new Error(result.message || 'Failed to delete review');
+    }
+  } catch (error) {
+    console.error('Error deleting review:', error);
+    throw error;
+  }
+};

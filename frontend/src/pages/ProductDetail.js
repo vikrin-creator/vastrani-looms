@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getProductById } from '../data/catalogData';
+import { getProductById, getProductReviews } from '../data/catalogData';
+import ReviewModal from '../components/product/ReviewModal';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -11,6 +12,21 @@ const ProductDetail = () => {
   const [selectedColor, setSelectedColor] = useState(null);
   const [detailsOpen, setDetailsOpen] = useState(true);
   const [shippingOpen, setShippingOpen] = useState(false);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [reviews, setReviews] = useState([]);
+  const [avgRating, setAvgRating] = useState(0);
+  const [reviewCount, setReviewCount] = useState(0);
+
+  const fetchReviews = useCallback(async () => {
+    try {
+      const reviewData = await getProductReviews(id);
+      setReviews(reviewData.reviews);
+      setAvgRating(reviewData.avgRating);
+      setReviewCount(reviewData.reviewCount);
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+    }
+  }, [id]);
 
   useEffect(() => {
     const fetchProductData = async () => {
@@ -35,6 +51,9 @@ const ProductDetail = () => {
         if (productData?.colors && productData.colors.length > 0) {
           setSelectedColor(productData.colors[0]);
         }
+
+        // Fetch reviews
+        fetchReviews();
       } catch (error) {
         console.error('Error fetching product:', error);
       } finally {
@@ -43,7 +62,7 @@ const ProductDetail = () => {
     };
 
     fetchProductData();
-  }, [id]);
+  }, [id, fetchReviews]);
 
   const handleAddToCart = () => {
     // TODO: Implement add to cart functionality
@@ -127,10 +146,21 @@ const ProductDetail = () => {
           <div className="flex items-center gap-2 mt-4">
             <div className="flex text-secondary">
               {[1, 2, 3, 4, 5].map((star) => (
-                <span key={star} className="material-symbols-outlined text-xl">star</span>
+                <span 
+                  key={star} 
+                  className={`material-symbols-outlined text-xl ${star <= Math.round(avgRating) ? 'text-yellow-500' : 'text-gray-300'}`}
+                  style={{ fontVariationSettings: '"FILL" 1' }}
+                >
+                  star
+                </span>
               ))}
             </div>
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">(4.8)</span>
+            <button
+              onClick={() => setIsReviewModalOpen(true)}
+              className="text-sm font-medium text-text-light dark:text-text-dark hover:text-secondary cursor-pointer underline"
+            >
+              ({reviewCount} {reviewCount === 1 ? 'review' : 'reviews'})
+            </button>
           </div>
 
           {/* Colors */}
@@ -238,6 +268,17 @@ const ProductDetail = () => {
           <p className="text-center text-gray-600 font-body">No related products available.</p>
         )}
       </section>
+
+      {/* Review Modal */}
+      <ReviewModal
+        isOpen={isReviewModalOpen}
+        onClose={() => setIsReviewModalOpen(false)}
+        reviews={reviews}
+        avgRating={avgRating}
+        reviewCount={reviewCount}
+        productId={id}
+        onReviewSubmitted={fetchReviews}
+      />
     </div>
   );
 };

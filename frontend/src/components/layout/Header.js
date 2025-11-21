@@ -41,16 +41,16 @@ const Header = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-secondary/30 px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-2 sm:py-3 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-sm">
+      <header className="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-secondary/30 px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-3 sm:py-4 md:py-3 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-sm">
         <Link to="/" className="flex items-center gap-2 sm:gap-3 md:gap-4 hover:opacity-80 transition-opacity">
-          <div className="size-10 sm:size-12 md:size-14">
+          <div className="size-12 sm:size-14 md:size-14">
             <img 
               src="/Logo_Transparent.png" 
               alt="Vastrani Looms Logo" 
               className="w-full h-full object-contain"
             />
           </div>
-          <h2 className="text-primary dark:text-secondary text-lg sm:text-xl md:text-2xl font-bold font-display leading-tight tracking-[-0.015em]">
+          <h2 className="text-primary dark:text-secondary text-xl sm:text-2xl md:text-2xl font-bold font-display leading-tight tracking-[-0.015em]">
             Vastrani Looms
           </h2>
         </Link>
@@ -168,69 +168,125 @@ const Header = () => {
         </div>
       </header>
       
-      {/* Mobile Menu */}
+      {/* Mobile Menu - Slides from Left */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm border-b border-secondary/30 px-4 sm:px-6 py-3 sm:py-4 z-40 max-h-[70vh] overflow-y-auto">
-          {/* Mobile Icons Section */}
-          <div className="flex justify-center gap-6 mb-6 pb-4 border-b border-secondary/20">
-            <button className="flex flex-col items-center gap-1 text-text-light dark:text-text-dark hover:text-secondary">
-              <span className="material-symbols-outlined text-2xl">person</span>
-              <span className="text-xs font-body">Account</span>
-            </button>
-            <button className="flex flex-col items-center gap-1 text-text-light dark:text-text-dark hover:text-secondary">
-              <span className="material-symbols-outlined text-2xl">favorite</span>
-              <span className="text-xs font-body">Wishlist</span>
-            </button>
-            <button className="flex flex-col items-center gap-1 text-text-light dark:text-text-dark hover:text-secondary">
-              <span className="material-symbols-outlined text-2xl">shopping_bag</span>
-              <span className="text-xs font-body">Cart</span>
-            </button>
-          </div>
+        <>
+          {/* Backdrop */}
+          <div 
+            className="md:hidden fixed inset-0 bg-black/50 z-40 animate-fadeIn"
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              setMobileShopExpanded(false);
+              setMobileExpandedSection(null);
+            }}
+          />
           
-          <nav className="flex flex-col gap-4">
-            <Link 
-              className="text-text-light dark:text-text-dark text-base font-medium font-body leading-normal hover:text-secondary" 
-              to="/"
-              onClick={() => {
-                setIsMobileMenuOpen(false);
-                setMobileShopExpanded(false);
-                setMobileExpandedSection(null);
-              }}
-            >
-              Home
-            </Link>
-            
-            {/* Mobile Shop Section */}
-            {!mobileShopExpanded ? (
-              // Level 1: Shop Now Button
+          {/* Main Menu Sidebar - Slides from Left */}
+          <div className="md:hidden fixed top-0 left-0 h-full w-[300px] bg-background-light dark:bg-background-dark z-50 shadow-2xl animate-slideInLeft overflow-y-auto">
+            {/* Close Button */}
+            <div className="flex justify-between items-center p-5 border-b border-secondary/30">
+              <h3 className="text-2xl font-display font-bold text-primary dark:text-secondary">Menu</h3>
               <button
-                className="text-left text-text-light dark:text-text-dark text-base font-medium font-body leading-normal hover:text-secondary flex items-center gap-2"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setMobileShopExpanded(false);
+                  setMobileExpandedSection(null);
+                }}
+                className="flex items-center justify-center rounded-full h-10 w-10 bg-primary/10 dark:bg-secondary/10 text-text-light dark:text-text-dark hover:bg-primary/20 dark:hover:bg-secondary/20"
+              >
+                <span className="material-symbols-outlined text-2xl">close</span>
+              </button>
+            </div>
+            
+            {/* Mobile Icons Section */}
+            <div className="flex justify-around gap-4 p-5 border-b border-secondary/20">
+              <button className="flex flex-col items-center gap-2 text-text-light dark:text-text-dark hover:text-secondary">
+                <span className="material-symbols-outlined text-3xl">person</span>
+                <span className="text-sm font-body">Account</span>
+              </button>
+              <button className="flex flex-col items-center gap-2 text-text-light dark:text-text-dark hover:text-secondary">
+                <span className="material-symbols-outlined text-3xl">favorite</span>
+                <span className="text-sm font-body">Wishlist</span>
+              </button>
+              <button className="flex flex-col items-center gap-2 text-text-light dark:text-text-dark hover:text-secondary">
+                <span className="material-symbols-outlined text-3xl">shopping_bag</span>
+                <span className="text-sm font-body">Cart</span>
+              </button>
+            </div>
+            
+            {/* Navigation Links */}
+            <nav className="flex flex-col p-5">
+              <Link 
+                className="text-text-light dark:text-text-dark text-lg font-medium font-body leading-normal hover:text-secondary py-4 border-b border-secondary/10" 
+                to="/"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setMobileShopExpanded(false);
+                  setMobileExpandedSection(null);
+                }}
+              >
+                Home
+              </Link>
+              
+              {/* Shop Now Button */}
+              <button
+                className="text-left text-text-light dark:text-text-dark text-lg font-medium font-body leading-normal hover:text-secondary flex items-center justify-between py-4 border-b border-secondary/10"
                 onClick={() => setMobileShopExpanded(true)}
               >
-                Shop Now
-                <span className="material-symbols-outlined text-sm">keyboard_arrow_right</span>
+                <span>Shop Now</span>
+                <span className="material-symbols-outlined text-xl">keyboard_arrow_right</span>
               </button>
-            ) : (
-              // Level 2: Shop Categories
-              <div className="space-y-2">
-                {/* Back Button */}
+              
+              <Link 
+                className="text-text-light dark:text-text-dark text-lg font-medium font-body leading-normal hover:text-secondary py-4 border-b border-secondary/10" 
+                to="/about"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setMobileShopExpanded(false);
+                  setMobileExpandedSection(null);
+                }}
+              >
+                About Us
+              </Link>
+              <Link 
+                className="text-text-light dark:text-text-dark text-lg font-medium font-body leading-normal hover:text-secondary py-4" 
+                to="/contact"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setMobileShopExpanded(false);
+                  setMobileExpandedSection(null);
+                }}
+              >
+                Contact
+              </Link>
+            </nav>
+          </div>
+          
+          {/* Shop Menu Sidebar - Slides from Right */}
+          {mobileShopExpanded && (
+            <div className="md:hidden fixed top-0 right-0 h-full w-[300px] bg-background-light dark:bg-background-dark z-50 shadow-2xl animate-slideInRight overflow-y-auto">
+              {/* Header with Back Button */}
+              <div className="flex items-center gap-3 p-5 border-b border-secondary/30">
                 <button
-                  className="flex items-center gap-2 text-secondary text-sm font-body mb-3"
                   onClick={() => {
                     setMobileShopExpanded(false);
                     setMobileExpandedSection(null);
                   }}
+                  className="flex items-center justify-center rounded-full h-10 w-10 bg-primary/10 dark:bg-secondary/10 text-text-light dark:text-text-dark hover:bg-primary/20 dark:hover:bg-secondary/20"
                 >
-                  <span className="material-symbols-outlined text-sm">arrow_back</span>
-                  Back to Menu
+                  <span className="material-symbols-outlined text-2xl">arrow_back</span>
                 </button>
-                
+                <h3 className="text-2xl font-display font-bold text-primary dark:text-secondary">Shop</h3>
+              </div>
+              
+              {/* Shop Content */}
+              <div className="p-5">
                 {!mobileExpandedSection ? (
-                  // Level 2: Main Shop Options
-                  <>
+                  // Level 1: Main Shop Options
+                  <div className="space-y-2">
                     {/* Shop By Type - Direct Link */}
                     <Link
-                      className="block text-text-light dark:text-text-dark text-base font-medium font-body leading-normal hover:text-secondary py-2 border-b border-secondary/20"
+                      className="block text-text-light dark:text-text-dark text-lg font-medium font-body leading-normal hover:text-secondary py-4 border-b border-secondary/10"
                       to="/products"
                       onClick={() => {
                         setIsMobileMenuOpen(false);
@@ -239,52 +295,52 @@ const Header = () => {
                       }}
                     >
                       <div className="flex items-center justify-between">
-                        <span>SHOP BY TYPE</span>
-                        <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                        <span>View All Products</span>
+                        <span className="material-symbols-outlined text-xl">arrow_forward</span>
                       </div>
                     </Link>
                     
                     {/* Collection - Expandable */}
                     <button
-                      className="w-full text-left text-text-light dark:text-text-dark text-base font-medium font-body leading-normal hover:text-secondary py-2 border-b border-secondary/20"
+                      className="w-full text-left text-text-light dark:text-text-dark text-lg font-medium font-body leading-normal hover:text-secondary py-4 border-b border-secondary/10"
                       onClick={() => setMobileExpandedSection('collections')}
                     >
                       <div className="flex items-center justify-between">
-                        <span>COLLECTION</span>
-                        <span className="material-symbols-outlined text-sm">keyboard_arrow_right</span>
+                        <span>Collections</span>
+                        <span className="material-symbols-outlined text-xl">keyboard_arrow_right</span>
                       </div>
                     </button>
                     
                     {/* Category - Expandable */}
                     <button
-                      className="w-full text-left text-text-light dark:text-text-dark text-base font-medium font-body leading-normal hover:text-secondary py-2"
+                      className="w-full text-left text-text-light dark:text-text-dark text-lg font-medium font-body leading-normal hover:text-secondary py-4"
                       onClick={() => setMobileExpandedSection('categories')}
                     >
                       <div className="flex items-center justify-between">
-                        <span>CATEGORY</span>
-                        <span className="material-symbols-outlined text-sm">keyboard_arrow_right</span>
+                        <span>Categories</span>
+                        <span className="material-symbols-outlined text-xl">keyboard_arrow_right</span>
                       </div>
                     </button>
-                  </>
+                  </div>
                 ) : (
-                  // Level 3: Expanded Lists
+                  // Level 2: Expanded Lists
                   <div className="space-y-1">
                     {/* Back to Shop Options */}
                     <button
-                      className="flex items-center gap-2 text-secondary text-sm font-body mb-3"
+                      className="flex items-center gap-2 text-secondary text-base font-body mb-4 py-2"
                       onClick={() => setMobileExpandedSection(null)}
                     >
-                      <span className="material-symbols-outlined text-sm">arrow_back</span>
-                      Back to Shop
+                      <span className="material-symbols-outlined text-xl">arrow_back</span>
+                      Back
                     </button>
                     
                     {mobileExpandedSection === 'collections' && (
                       <>
-                        <h4 className="text-primary dark:text-secondary text-sm font-bold font-display mb-2">COLLECTIONS</h4>
+                        <h4 className="text-primary dark:text-secondary text-base font-bold font-display mb-4 uppercase">Collections</h4>
                         {collections.map((collection, index) => (
                           <Link
                             key={index}
-                            className="block text-text-light dark:text-text-dark text-sm font-body leading-relaxed hover:text-secondary hover:bg-primary/5 dark:hover:bg-secondary/5 px-2 py-1 rounded"
+                            className="block text-text-light dark:text-text-dark text-base font-body leading-relaxed hover:text-secondary hover:bg-primary/5 dark:hover:bg-secondary/5 px-3 py-3 rounded"
                             to={`/products?collection=${encodeURIComponent(collection)}`}
                             onClick={() => {
                               setIsMobileMenuOpen(false);
@@ -300,11 +356,11 @@ const Header = () => {
                     
                     {mobileExpandedSection === 'categories' && (
                       <>
-                        <h4 className="text-primary dark:text-secondary text-sm font-bold font-display mb-2">CATEGORIES</h4>
+                        <h4 className="text-primary dark:text-secondary text-base font-bold font-display mb-4 uppercase">Categories</h4>
                         {categories.map((category, index) => (
                           <Link
                             key={index}
-                            className="block text-text-light dark:text-text-dark text-sm font-body leading-relaxed hover:text-secondary hover:bg-primary/5 dark:hover:bg-secondary/5 px-2 py-1 rounded"
+                            className="block text-text-light dark:text-text-dark text-base font-body leading-relaxed hover:text-secondary hover:bg-primary/5 dark:hover:bg-secondary/5 px-3 py-3 rounded"
                             to={`/products?category=${encodeURIComponent(category)}`}
                             onClick={() => {
                               setIsMobileMenuOpen(false);
@@ -320,32 +376,9 @@ const Header = () => {
                   </div>
                 )}
               </div>
-            )}
-            
-            <Link 
-              className="text-text-light dark:text-text-dark text-base font-medium font-body leading-normal hover:text-secondary" 
-              to="/about"
-              onClick={() => {
-                setIsMobileMenuOpen(false);
-                setMobileShopExpanded(false);
-                setMobileExpandedSection(null);
-              }}
-            >
-              About Us
-            </Link>
-            <Link 
-              className="text-text-light dark:text-text-dark text-base font-medium font-body leading-normal hover:text-secondary" 
-              to="/contact"
-              onClick={() => {
-                setIsMobileMenuOpen(false);
-                setMobileShopExpanded(false);
-                setMobileExpandedSection(null);
-              }}
-            >
-              Contact
-            </Link>
-          </nav>
-        </div>
+            </div>
+          )}
+        </>
       )}
     </>
   );
