@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { dataStore } from '../../data/catalogData';
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -7,6 +8,21 @@ const Header = () => {
   const [hoverTimeout, setHoverTimeout] = useState(null);
   const [mobileShopExpanded, setMobileShopExpanded] = useState(false);
   const [mobileExpandedSection, setMobileExpandedSection] = useState(null);
+  const [collections, setCollections] = useState([]);
+  const [categories, setCategories] = useState([]);
+
+  // Load and subscribe to data changes
+  useEffect(() => {
+    const updateData = () => {
+      setCollections(dataStore.getCollections().map(c => c.name));
+      setCategories(dataStore.getCategories().map(c => c.name));
+    };
+    
+    updateData();
+    const unsubscribe = dataStore.subscribe(updateData);
+    
+    return () => unsubscribe();
+  }, []);
 
   const handleMouseEnter = () => {
     if (hoverTimeout) {
@@ -23,50 +39,11 @@ const Header = () => {
     setHoverTimeout(timeout);
   };
 
-  const collections = [
-    'Kanjivaram Classics',
-    'Banarasi Heritage Weaves',
-    'Chanderi Grace Collection',
-    'Patola & Bandhej Treasures',
-    'Kota Doria Light Weaves',
-    'Tussar & Bhagalpuri Elegance',
-    'Zari Royale Collection',
-    'Handcrafted Luxe Sarees',
-    'Pure Silk Premium Edit',
-    'Embroidered Grand Couture',
-    'Heirloom Wedding Luxuries',
-    'Bridal Radiance Collection',
-    'Festive Sparkle Edit',
-    'Party Glam Sarees',
-    'Haldi–Mehndi Celebration Picks'
-  ];
-
-  const categories = [
-    'Kanchipuram',
-    'Banarasi',
-    'Mysore Silk',
-    'Soft Silk',
-    'Organza',
-    'Linen',
-    'Tussar',
-    'Chanderi',
-    'Cotton',
-    'Pure Silk',
-    'Designer Sarees',
-    'Soft Banarasi',
-    'Semi Banarasi',
-    'Tissue Banarasi',
-    'Gadwal',
-    'Narayanpet',
-    'Ikkat',
-    'Kanchi Padya'
-  ];
-
   return (
     <>
       <header className="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-secondary/30 px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-2 sm:py-3 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-sm">
         <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
-          <div className="size-8 sm:size-9 md:size-10">
+          <div className="size-10 sm:size-12 md:size-14">
             <img 
               src="/Logo_Transparent.png" 
               alt="Vastrani Looms Logo" 
@@ -79,7 +56,7 @@ const Header = () => {
         </div>
         
         <nav className="hidden md:flex flex-1 justify-center items-center gap-4 lg:gap-6 xl:gap-9">
-          <Link className="text-text-light dark:text-text-dark text-sm lg:text-base font-medium font-body leading-normal hover:text-secondary" to="/">Home</Link>
+          <Link className="text-text-light dark:text-text-dark text-xs lg:text-sm font-medium font-body leading-normal hover:text-secondary" to="/">Home</Link>
           
           {/* Shop Now Dropdown */}
           <div 
@@ -88,7 +65,7 @@ const Header = () => {
             onMouseLeave={handleMouseLeave}
           >
             <Link 
-              className="text-text-light dark:text-text-dark text-sm lg:text-base font-medium font-body leading-normal hover:text-secondary flex items-center gap-1" 
+              className="text-text-light dark:text-text-dark text-xs lg:text-sm font-medium font-body leading-normal hover:text-secondary flex items-center gap-1" 
               to="/products"
             >
               Shop Now
@@ -106,7 +83,7 @@ const Header = () => {
                 <div className="flex flex-col lg:flex-row">
                   {/* Shop By Type Column */}
                   <div className="hidden lg:block border-r border-secondary/20 pr-3 mr-6 min-w-[120px]">
-                    <h3 className="text-primary dark:text-secondary text-sm md:text-base font-bold font-display mb-2 md:mb-3">
+                    <h3 className="text-primary dark:text-secondary text-xs font-bold font-display mb-2 md:mb-3">
                       SHOP BY TYPE
                     </h3>
                   </div>
@@ -115,7 +92,7 @@ const Header = () => {
                   <div className="flex flex-col sm:flex-row gap-6 flex-1">
                     {/* Collections Column */}
                     <div className="flex-1">
-                      <h3 className="text-primary dark:text-secondary text-sm md:text-base font-bold font-display mb-2 md:mb-3">
+                      <h3 className="text-primary dark:text-secondary text-xs font-bold font-display mb-2 md:mb-3">
                         COLLECTION
                       </h3>
                       <div className="space-y-0.5 sm:space-y-1">
@@ -123,7 +100,7 @@ const Header = () => {
                           <Link
                             key={index}
                             to={`/products?collection=${encodeURIComponent(collection)}`}
-                            className="block text-text-light dark:text-text-dark text-xs sm:text-sm font-body leading-relaxed hover:text-secondary hover:bg-primary/5 dark:hover:bg-secondary/5 px-1 sm:px-2 py-0.5 sm:py-1 rounded transition-colors"
+                            className="block text-text-light dark:text-text-dark text-[10px] sm:text-xs font-body leading-relaxed hover:text-secondary hover:bg-primary/5 dark:hover:bg-secondary/5 px-1 sm:px-2 py-0.5 sm:py-1 rounded transition-colors"
                           >
                             {collection}
                           </Link>
@@ -133,7 +110,7 @@ const Header = () => {
                     
                     {/* Categories Column */}
                     <div className="flex-1">
-                      <h3 className="text-primary dark:text-secondary text-sm md:text-base font-bold font-display mb-2 md:mb-3">
+                      <h3 className="text-primary dark:text-secondary text-xs font-bold font-display mb-2 md:mb-3">
                         CATEGORY
                       </h3>
                       <div className="space-y-0.5 sm:space-y-1">
@@ -141,7 +118,7 @@ const Header = () => {
                           <Link
                             key={index}
                             to={`/products?category=${encodeURIComponent(category)}`}
-                            className="block text-text-light dark:text-text-dark text-xs sm:text-sm font-body leading-relaxed hover:text-secondary hover:bg-primary/5 dark:hover:bg-secondary/5 px-1 sm:px-2 py-0.5 sm:py-1 rounded transition-colors"
+                            className="block text-text-light dark:text-text-dark text-[10px] sm:text-xs font-body leading-relaxed hover:text-secondary hover:bg-primary/5 dark:hover:bg-secondary/5 px-1 sm:px-2 py-0.5 sm:py-1 rounded transition-colors"
                           >
                             {category}
                           </Link>
@@ -155,18 +132,18 @@ const Header = () => {
                 <div className="mt-3 sm:mt-4 pt-2 sm:pt-3 border-t border-secondary/20 text-center">
                   <Link
                     to="/products"
-                    className="inline-flex items-center gap-1 sm:gap-2 bg-primary text-white dark:bg-secondary dark:text-primary px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-bold font-body hover:bg-primary/90 dark:hover:bg-secondary/90 transition-colors"
+                    className="inline-flex items-center gap-1 sm:gap-2 bg-primary text-white dark:bg-secondary dark:text-primary px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-[10px] sm:text-xs font-bold font-body hover:bg-primary/90 dark:hover:bg-secondary/90 transition-colors"
                   >
                     View All Products
-                    <span className="material-symbols-outlined text-xs sm:text-sm">arrow_forward</span>
+                    <span className="material-symbols-outlined text-[10px] sm:text-xs">arrow_forward</span>
                   </Link>
                 </div>
               </div>
             )}
           </div>
           
-          <Link className="text-text-light dark:text-text-dark text-sm lg:text-base font-medium font-body leading-normal hover:text-secondary" to="/about">About Us</Link>
-          <Link className="text-text-light dark:text-text-dark text-sm lg:text-base font-medium font-body leading-normal hover:text-secondary" to="/contact">Contact</Link>
+          <Link className="text-text-light dark:text-text-dark text-xs lg:text-sm font-medium font-body leading-normal hover:text-secondary" to="/about">About Us</Link>
+          <Link className="text-text-light dark:text-text-dark text-xs lg:text-sm font-medium font-body leading-normal hover:text-secondary" to="/contact">Contact</Link>
         </nav>
         
         <div className="flex items-center gap-2 md:gap-3">

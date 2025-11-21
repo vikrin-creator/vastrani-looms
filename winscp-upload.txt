@@ -1,0 +1,10 @@
+open ftp://u177524058.seashell-yak-534067.hostingersite.com:gJW3U)ER4{6)Qw66@145.79.212.7
+cd /domains/seashell-yak-534067.hostingersite.com/public_html
+mkdir backend
+cd backend
+mkdir config
+mkdir api
+put backend\config\database.php config/
+put backend\api\categories.php api/
+put backend\api\collections.php api/
+exit
