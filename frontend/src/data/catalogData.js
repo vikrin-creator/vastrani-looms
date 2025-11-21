@@ -229,14 +229,14 @@ export const getProductById = async (id) => {
       
       // Fetch related products from the same category
       let relatedProducts = [];
-      if (product.category_id) {
-        const relatedResponse = await fetch(`${API_BASE_URL}/products.php?category=${product.category_id}`);
+      if (product.category_name) {
+        const relatedResponse = await fetch(`${API_BASE_URL}/products.php?category=${encodeURIComponent(product.category_name)}`);
         const relatedResult = await relatedResponse.json();
         
         if (relatedResult.success) {
           // Filter out the current product and limit to 4 items
           relatedProducts = relatedResult.data
-            .filter(p => p.id !== product.id)
+            .filter(p => p.id !== parseInt(id))
             .slice(0, 4);
         }
       }
