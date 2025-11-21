@@ -23,15 +23,14 @@ try {
                 $productId = intval($_GET['product_id']);
                 
                 $query = "SELECT r.*, 
-                         (SELECT AVG(rating) FROM reviews WHERE product_id = :product_id) as avg_rating,
-                         (SELECT COUNT(*) FROM reviews WHERE product_id = :product_id) as review_count
+                         (SELECT AVG(rating) FROM reviews WHERE product_id = ?) as avg_rating,
+                         (SELECT COUNT(*) FROM reviews WHERE product_id = ?) as review_count
                          FROM reviews r 
-                         WHERE r.product_id = :product_id 
+                         WHERE r.product_id = ? 
                          ORDER BY r.created_at DESC";
                 
                 $stmt = $db->prepare($query);
-                $stmt->bindParam(':product_id', $productId);
-                $stmt->execute();
+                $stmt->execute([$productId, $productId, $productId]);
                 
                 $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 
