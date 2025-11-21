@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { dataStore } from '../../data/catalogData';
 
+// API Base URL with fallback
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://seashell-yak-534067.hostingersite.com/backend/api';
+
 const ProductManagement = () => {
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [categories, setCategories] = useState([]);
@@ -11,25 +15,46 @@ const ProductManagement = () => {
     name: '',
     description: '',
     price: '',
-    salePrice: '',
-    sku: '',
+    sale_price: '',
     stock: '',
-    category: '',
-    collection: '',
+    category_id: '',
+    collection_id: '',
+    fabric: '',
     colors: [],
     images: []
   });
 
   const [colorInput, setColorInput] = useState({ name: '', code: '#800000' });
 
+  // Load products from API
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/products.php?include_disabled=true`);
+      const result = await response.json();
+      
+      if (result.success) {
+        setProducts(result.data || []);
+      } else {
+        console.error('Failed to fetch products:', result.message);
+      }
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Load categories and collections on mount
   useEffect(() => {
     const updateData = () => {
-      setCategories(dataStore.getCategories());
-      setCollections(dataStore.getCollections());
+      setCategories(dataStore.getAllCategories());
+      setCollections(dataStore.getAllCollections());
     };
     
     updateData();
+    fetchProducts();
+    
     const unsubscribe = dataStore.subscribe(updateData);
     
     return () => unsubscribe();
@@ -37,10 +62,11 @@ const ProductManagement = () => {
 
   const handleAddColor = () => {
     if (colorInput.name && colorInput.code) {
-      setFormData({
-        ...formData,
-        colors: [...formData.colors, { ...colorInput, id: Date.now() }]
-      });
+      const newColor = { name: colorInput.name, code: colorInput.code, id: Date.now() };
+      setFormData(prevData => ({
+        ...prevData,
+        colors: [...prevData.colors, newColor]
+      }));
       setColorInput({ name: '', code: '#800000' });
     }
   };
@@ -52,38 +78,105 @@ const ProductManagement = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (editingProduct) {
-      setProducts(products.map(p => p.id === editingProduct.id ? { ...formData, id: editingProduct.id } : p));
-    } else {
-      setProducts([...products, { ...formData, id: Date.now() }]);
+    
+    try {
+      const url = editingProduct 
+        ? `${API_BASE_URL}/products.php`
+        : `${API_BASE_URL}/products.php`;
+      
+      const method = editingProduct ? 'PUT' : 'POST';
+      
+      const payload = {
+        ...formData,
+        id: editingProduct?.id,
+        // Convert string values to numbers
+        price: parseFloat(formData.price),
+        sale_price: formData.sale_price ? parseFloat(formData.sale_price) : null,
+        stock: parseInt(formData.stock) || 0,
+        category_id: parseInt(formData.category_id),
+        collection_id: formData.collection_id ? parseInt(formData.collection_id) : null
+      };
+      
+      const response = await fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        // Refresh products list
+        await fetchProducts();
+        
+        // Close modal and reset form
+        setIsModalOpen(false);
+        setEditingProduct(null);
+        setFormData({
+          name: '',
+          description: '',
+          price: '',
+          sale_price: '',
+          stock: '',
+          category_id: '',
+          collection_id: '',
+          fabric: '',
+          colors: [],
+          images: []
+        });
+      } else {
+        alert('Error: ' + result.message);
+      }
+    } catch (error) {
+      console.error('Error saving product:', error);
+      alert('Failed to save product. Please try again.');
     }
-    setIsModalOpen(false);
-    setEditingProduct(null);
-    setFormData({
-      name: '',
-      description: '',
-      price: '',
-      salePrice: '',
-      sku: '',
-      stock: '',
-      category: '',
-      collection: '',
-      colors: [],
-      images: []
-    });
   };
 
   const handleEdit = (product) => {
     setEditingProduct(product);
-    setFormData(product);
+    setFormData({
+      name: product.name || '',
+      description: product.description || '',
+      price: product.price || '',
+      sale_price: product.sale_price || '',
+      stock: product.stock || '',
+      category_id: product.category_id || '',
+      collection_id: product.collection_id || '',
+      fabric: product.fabric || '',
+      colors: product.colors || [],
+      images: product.images || []
+    });
     setIsModalOpen(true);
   };
 
-  const handleDelete = (productId) => {
+  const handleDelete = async (productId) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
-      setProducts(products.filter(p => p.id !== productId));
+      try {
+        const response = await fetch(`${API_BASE_URL}/products.php`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ id: productId })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          // Refresh products list
+          await fetchProducts();
+        } else {
+          alert('Error: ' + result.message);
+        }
+      } catch (error) {
+        console.error('Error deleting product:', error);
+        alert('Failed to delete product. Please try again.');
+      }
     }
   };
 
@@ -102,11 +195,11 @@ const ProductManagement = () => {
               name: '',
               description: '',
               price: '',
-              salePrice: '',
-              sku: '',
+              sale_price: '',
               stock: '',
-              category: '',
-              collection: '',
+              category_id: '',
+              collection_id: '',
+              fabric: '',
               colors: [],
               images: []
             });
@@ -121,75 +214,79 @@ const ProductManagement = () => {
 
       {/* Products Table */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-primary/10 dark:bg-secondary/10">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-body font-bold text-primary dark:text-secondary uppercase tracking-wider">Product</th>
-              <th className="px-6 py-3 text-left text-xs font-body font-bold text-primary dark:text-secondary uppercase tracking-wider">SKU</th>
-              <th className="px-6 py-3 text-left text-xs font-body font-bold text-primary dark:text-secondary uppercase tracking-wider">Price</th>
-              <th className="px-6 py-3 text-left text-xs font-body font-bold text-primary dark:text-secondary uppercase tracking-wider">Stock</th>
-              <th className="px-6 py-3 text-left text-xs font-body font-bold text-primary dark:text-secondary uppercase tracking-wider">Category</th>
-              <th className="px-6 py-3 text-left text-xs font-body font-bold text-primary dark:text-secondary uppercase tracking-wider">Colors</th>
-              <th className="px-6 py-3 text-right text-xs font-body font-bold text-primary dark:text-secondary uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-            {products.length === 0 ? (
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary dark:border-secondary"></div>
+          </div>
+        ) : (
+          <table className="w-full">
+            <thead className="bg-primary/10 dark:bg-secondary/10">
               <tr>
-                <td colSpan="7" className="px-6 py-8 text-center text-text-light/60 dark:text-text-dark/60 font-body">
-                  No products added yet. Click "Add Product" to get started.
-                </td>
+                <th className="px-6 py-3 text-left text-xs font-body font-bold text-primary dark:text-secondary uppercase tracking-wider">Product</th>
+                <th className="px-6 py-3 text-left text-xs font-body font-bold text-primary dark:text-secondary uppercase tracking-wider">Price</th>
+                <th className="px-6 py-3 text-left text-xs font-body font-bold text-primary dark:text-secondary uppercase tracking-wider">Stock</th>
+                <th className="px-6 py-3 text-left text-xs font-body font-bold text-primary dark:text-secondary uppercase tracking-wider">Category</th>
+                <th className="px-6 py-3 text-left text-xs font-body font-bold text-primary dark:text-secondary uppercase tracking-wider">Colors</th>
+                <th className="px-6 py-3 text-right text-xs font-body font-bold text-primary dark:text-secondary uppercase tracking-wider">Actions</th>
               </tr>
-            ) : (
-              products.map((product) => (
-                <tr key={product.id} className="hover:bg-primary/5 dark:hover:bg-secondary/5">
-                  <td className="px-6 py-4">
-                    <div className="font-body font-semibold text-text-light dark:text-text-dark">{product.name}</div>
-                    <div className="text-sm text-text-light/60 dark:text-text-dark/60">{product.collection}</div>
-                  </td>
-                  <td className="px-6 py-4 font-body text-sm text-text-light dark:text-text-dark">{product.sku}</td>
-                  <td className="px-6 py-4 font-body text-sm text-text-light dark:text-text-dark">
-                    ₹{product.price}
-                    {product.salePrice && (
-                      <span className="ml-2 text-xs text-secondary line-through">₹{product.salePrice}</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 font-body text-sm text-text-light dark:text-text-dark">{product.stock}</td>
-                  <td className="px-6 py-4 font-body text-sm text-text-light dark:text-text-dark">{product.category}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex gap-1">
-                      {product.colors.slice(0, 3).map((color) => (
-                        <div
-                          key={color.id}
-                          className="w-6 h-6 rounded-full border-2 border-gray-300"
-                          style={{ backgroundColor: color.code }}
-                          title={color.name}
-                        />
-                      ))}
-                      {product.colors.length > 3 && (
-                        <span className="text-xs text-text-light/60 dark:text-text-dark/60">+{product.colors.length - 3}</span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-right space-x-2">
-                    <button
-                      onClick={() => handleEdit(product)}
-                      className="text-primary dark:text-secondary hover:text-primary/70 dark:hover:text-secondary/70"
-                    >
-                      <span className="material-symbols-outlined">edit</span>
-                    </button>
-                    <button
-                      onClick={() => handleDelete(product.id)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      <span className="material-symbols-outlined">delete</span>
-                    </button>
+            </thead>
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+              {products.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="px-6 py-8 text-center text-text-light/60 dark:text-text-dark/60 font-body">
+                    No products added yet. Click "Add Product" to get started.
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                products.map((product) => (
+                  <tr key={product.id} className="hover:bg-primary/5 dark:hover:bg-secondary/5">
+                    <td className="px-6 py-4">
+                      <div className="font-body font-semibold text-text-light dark:text-text-dark">{product.name}</div>
+                      <div className="text-sm text-text-light/60 dark:text-text-dark/60">{product.collection_name || '-'}</div>
+                    </td>
+                    <td className="px-6 py-4 font-body text-sm text-text-light dark:text-text-dark">
+                      ₹{product.price}
+                      {product.sale_price && (
+                        <span className="ml-2 text-xs text-secondary line-through">₹{product.sale_price}</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 font-body text-sm text-text-light dark:text-text-dark">{product.stock}</td>
+                    <td className="px-6 py-4 font-body text-sm text-text-light dark:text-text-dark">{product.category_name || '-'}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex gap-1">
+                        {product.colors && product.colors.slice(0, 3).map((color, idx) => (
+                          <div
+                            key={color.id || idx}
+                            className="w-6 h-6 rounded-full border-2 border-gray-300"
+                            style={{ backgroundColor: color.code }}
+                            title={color.name}
+                          />
+                        ))}
+                        {product.colors && product.colors.length > 3 && (
+                          <span className="text-xs text-text-light/60 dark:text-text-dark/60">+{product.colors.length - 3}</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-right space-x-2">
+                      <button
+                        onClick={() => handleEdit(product)}
+                        className="text-primary dark:text-secondary hover:text-primary/70 dark:hover:text-secondary/70"
+                      >
+                        <span className="material-symbols-outlined">edit</span>
+                      </button>
+                      <button
+                        onClick={() => handleDelete(product.id)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        <span className="material-symbols-outlined">delete</span>
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* Add/Edit Product Modal */}
@@ -209,32 +306,17 @@ const ProductManagement = () => {
             </div>
             
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-body font-semibold text-text-light dark:text-text-dark mb-2">
-                    Product Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary dark:focus:ring-secondary focus:border-transparent bg-white dark:bg-gray-700 text-text-light dark:text-text-dark"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-body font-semibold text-text-light dark:text-text-dark mb-2">
-                    SKU *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.sku}
-                    onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary dark:focus:ring-secondary focus:border-transparent bg-white dark:bg-gray-700 text-text-light dark:text-text-dark"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-body font-semibold text-text-light dark:text-text-dark mb-2">
+                  Product Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary dark:focus:ring-secondary focus:border-transparent bg-white dark:bg-gray-700 text-text-light dark:text-text-dark"
+                />
               </div>
 
               <div>
@@ -269,8 +351,8 @@ const ProductManagement = () => {
                   </label>
                   <input
                     type="number"
-                    value={formData.salePrice}
-                    onChange={(e) => setFormData({ ...formData, salePrice: e.target.value })}
+                    value={formData.sale_price}
+                    onChange={(e) => setFormData({ ...formData, sale_price: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary dark:focus:ring-secondary focus:border-transparent bg-white dark:bg-gray-700 text-text-light dark:text-text-dark"
                   />
                 </div>
@@ -296,13 +378,13 @@ const ProductManagement = () => {
                   </label>
                   <select
                     required
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    value={formData.category_id}
+                    onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary dark:focus:ring-secondary focus:border-transparent bg-white dark:bg-gray-700 text-text-light dark:text-text-dark"
                   >
                     <option value="">Select Category</option>
                     {categories.map((cat) => (
-                      <option key={cat.id} value={cat.name}>{cat.name}</option>
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
                     ))}
                   </select>
                 </div>
@@ -312,13 +394,13 @@ const ProductManagement = () => {
                     Collection
                   </label>
                   <select
-                    value={formData.collection}
-                    onChange={(e) => setFormData({ ...formData, collection: e.target.value })}
+                    value={formData.collection_id}
+                    onChange={(e) => setFormData({ ...formData, collection_id: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary dark:focus:ring-secondary focus:border-transparent bg-white dark:bg-gray-700 text-text-light dark:text-text-dark"
                   >
                     <option value="">Select Collection</option>
                     {collections.map((col) => (
-                      <option key={col.id} value={col.name}>{col.name}</option>
+                      <option key={col.id} value={col.id}>{col.name}</option>
                     ))}
                   </select>
                 </div>
@@ -380,13 +462,45 @@ const ProductManagement = () => {
                 <label className="block text-sm font-body font-semibold text-text-light dark:text-text-dark mb-2">
                   Product Images
                 </label>
-                <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
+                <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center cursor-pointer hover:border-primary dark:hover:border-secondary transition-colors"
+                     onClick={() => document.getElementById('image-upload').click()}>
                   <span className="material-symbols-outlined text-4xl text-gray-400 mb-2">cloud_upload</span>
                   <p className="text-sm text-text-light/60 dark:text-text-dark/60 font-body">
                     Click to upload or drag and drop images
                   </p>
-                  <input type="file" multiple accept="image/*" className="hidden" />
+                  <input 
+                    id="image-upload"
+                    type="file" 
+                    multiple 
+                    accept="image/*" 
+                    className="hidden"
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files);
+                      console.log('Selected files:', files);
+                      // TODO: Handle image upload to server
+                      alert(`${files.length} image(s) selected. Image upload to server will be implemented next.`);
+                    }}
+                  />
                 </div>
+                {formData.images && formData.images.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {formData.images.map((img, idx) => (
+                      <div key={idx} className="relative w-20 h-20 border rounded">
+                        <img src={img.url} alt={img.alt_text} className="w-full h-full object-cover rounded" />
+                        <button
+                          type="button"
+                          onClick={() => setFormData(prev => ({
+                            ...prev,
+                            images: prev.images.filter((_, i) => i !== idx)
+                          }))}
+                          className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-700"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Action Buttons */}
