@@ -178,7 +178,7 @@ const Products = () => {
                   className="bg-cover bg-center aspect-[4/3] transition-transform duration-300 group-hover:scale-105" 
                   style={{ 
                     backgroundImage: product.images && product.images.length > 0 
-                      ? `url('${product.images[0].image_url}')` 
+                      ? `url('https://seashell-yak-534067.hostingersite.com/${product.images[0].url}')` 
                       : 'linear-gradient(135deg, #F5E6D3 0%, #D4AF37 100%)'
                   }}
                 ></div>
@@ -212,12 +212,12 @@ const Products = () => {
                   </div>
                   {product.colors && product.colors.length > 0 && (
                     <div className="mt-3 flex gap-1">
-                      {product.colors.slice(0, 5).map((color) => (
+                      {product.colors.slice(0, 5).map((color, idx) => (
                         <div
-                          key={color.id}
+                          key={color.id || idx}
                           className="w-6 h-6 rounded-full border-2 border-gray-300"
-                          style={{ backgroundColor: color.color_code }}
-                          title={color.color_name}
+                          style={{ backgroundColor: color.code }}
+                          title={color.name}
                         />
                       ))}
                       {product.colors.length > 5 && (
