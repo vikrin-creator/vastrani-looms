@@ -25,6 +25,31 @@ const ProductManagement = () => {
   });
 
   const [colorInput, setColorInput] = useState({ name: '', code: '#800000' });
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  // Upload image to server
+  const uploadImage = async (file) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/upload-image.php`, {
+        method: 'POST',
+        body: formData
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        return result.data.url;
+      } else {
+        throw new Error(result.message);
+      }
+    } catch (error) {
+      console.error('Image upload failed:', error);
+      throw error;
+    }
+  };
 
   // Load products from API
   const fetchProducts = async () => {
@@ -82,6 +107,31 @@ const ProductManagement = () => {
     e.preventDefault();
     
     try {
+      setUploadingImage(true);
+      
+      // Upload all images to server first
+      const uploadedImages = [];
+      for (const img of formData.images) {
+        if (img.file) {
+          // New image file that needs to be uploaded
+          const uploadedUrl = await uploadImage(img.file);
+          uploadedImages.push({
+            url: uploadedUrl,
+            alt_text: img.alt_text || formData.name,
+            display_order: img.display_order
+          });
+        } else if (img.url) {
+          // Existing image URL (for edit mode)
+          uploadedImages.push({
+            url: img.url,
+            alt_text: img.alt_text || formData.name,
+            display_order: img.display_order
+          });
+        }
+      }
+      
+      setUploadingImage(false);
+      
       const url = editingProduct 
         ? `${API_BASE_URL}/products.php`
         : `${API_BASE_URL}/products.php`;
@@ -91,6 +141,7 @@ const ProductManagement = () => {
       const payload = {
         ...formData,
         id: editingProduct?.id,
+        images: uploadedImages,
         // Convert string values to numbers
         price: parseFloat(formData.price),
         sale_price: formData.sale_price ? parseFloat(formData.sale_price) : null,
@@ -460,47 +511,76 @@ const ProductManagement = () => {
               {/* Image Upload Section */}
               <div>
                 <label className="block text-sm font-body font-semibold text-text-light dark:text-text-dark mb-2">
-                  Product Images
+                  Product Images (Max 4)
                 </label>
-                <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center cursor-pointer hover:border-primary dark:hover:border-secondary transition-colors"
-                     onClick={() => document.getElementById('image-upload').click()}>
-                  <span className="material-symbols-outlined text-4xl text-gray-400 mb-2">cloud_upload</span>
-                  <p className="text-sm text-text-light/60 dark:text-text-dark/60 font-body">
-                    Click to upload or drag and drop images
-                  </p>
-                  <input 
-                    id="image-upload"
-                    type="file" 
-                    multiple 
-                    accept="image/*" 
-                    className="hidden"
-                    onChange={(e) => {
-                      const files = Array.from(e.target.files);
-                      console.log('Selected files:', files);
-                      // TODO: Handle image upload to server
-                      alert(`${files.length} image(s) selected. Image upload to server will be implemented next.`);
-                    }}
-                  />
+                
+                {/* Image Preview Grid */}
+                <div className="grid grid-cols-4 gap-3 mb-3">
+                  {formData.images && formData.images.map((img, idx) => (
+                    <div key={idx} className="relative aspect-square border-2 border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+                      <img src={img.url || URL.createObjectURL(img.file)} alt={img.alt_text || 'Product'} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({
+                          ...prev,
+                          images: prev.images.filter((_, i) => i !== idx)
+                        }))}
+                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-700 shadow-lg"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  
+                  {/* Add Image Button - show only if less than 4 images */}
+                  {(!formData.images || formData.images.length < 4) && (
+                    <div 
+                      className="aspect-square border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary dark:hover:border-secondary transition-colors"
+                      onClick={() => document.getElementById('image-upload').click()}
+                    >
+                      <span className="material-symbols-outlined text-3xl text-gray-400">add_photo_alternate</span>
+                      <span className="text-xs text-gray-500 mt-1">Add Image</span>
+                    </div>
+                  )}
                 </div>
-                {formData.images && formData.images.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {formData.images.map((img, idx) => (
-                      <div key={idx} className="relative w-20 h-20 border rounded">
-                        <img src={img.url} alt={img.alt_text} className="w-full h-full object-cover rounded" />
-                        <button
-                          type="button"
-                          onClick={() => setFormData(prev => ({
-                            ...prev,
-                            images: prev.images.filter((_, i) => i !== idx)
-                          }))}
-                          className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-700"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                
+                <input 
+                  id="image-upload"
+                  type="file" 
+                  multiple 
+                  accept="image/*" 
+                  className="hidden"
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files);
+                    const currentImages = formData.images || [];
+                    const remainingSlots = 4 - currentImages.length;
+                    
+                    if (remainingSlots <= 0) {
+                      alert('Maximum 4 images allowed');
+                      return;
+                    }
+                    
+                    const filesToAdd = files.slice(0, remainingSlots);
+                    const newImages = filesToAdd.map((file, idx) => ({
+                      file: file,
+                      url: URL.createObjectURL(file),
+                      alt_text: formData.name || 'Product image',
+                      display_order: currentImages.length + idx
+                    }));
+                    
+                    setFormData(prev => ({
+                      ...prev,
+                      images: [...currentImages, ...newImages]
+                    }));
+                    
+                    // Reset input
+                    e.target.value = '';
+                  }}
+                />
+                
+                <p className="text-xs text-text-light/60 dark:text-text-dark/60 mt-2">
+                  Upload up to 4 product images. First image will be the primary image.
+                </p>
               </div>
 
               {/* Action Buttons */}
@@ -509,14 +589,16 @@ const ProductManagement = () => {
                   type="button"
                   onClick={() => setIsModalOpen(false)}
                   className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-text-light dark:text-text-dark rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-body"
+                  disabled={uploadingImage}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-primary dark:bg-secondary text-white dark:text-primary rounded-lg hover:bg-primary/90 dark:hover:bg-secondary/90 transition-colors font-body font-semibold"
+                  disabled={uploadingImage}
+                  className="px-6 py-2 bg-primary dark:bg-secondary text-white dark:text-primary rounded-lg hover:bg-primary/90 dark:hover:bg-secondary/90 transition-colors font-body font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {editingProduct ? 'Update Product' : 'Add Product'}
+                  {uploadingImage ? 'Uploading Images...' : (editingProduct ? 'Update Product' : 'Add Product')}
                 </button>
               </div>
             </form>

@@ -18,6 +18,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_once '../config/database.php';
 
+// Helper function to delete physical image file
+function deleteImageFile($imageUrl) {
+    if (empty($imageUrl)) return;
+    
+    // Convert URL to file path
+    $filePath = str_replace('backend/', '../', $imageUrl);
+    
+    if (file_exists($filePath)) {
+        unlink($filePath);
+        error_log("Deleted image file: " . $filePath);
+    }
+}
+
 $method = $_SERVER['REQUEST_METHOD'];
 
 try {
@@ -78,13 +91,13 @@ try {
             
             // Fetch product colors and images for each product
             foreach ($products as &$product) {
-                // Get colors
-                $colorStmt = $db->prepare("SELECT * FROM product_colors WHERE product_id = ?");
+                // Get colors - map column names to match frontend expectations
+                $colorStmt = $db->prepare("SELECT id, product_id, color_name as name, color_code as code, stock FROM product_colors WHERE product_id = ?");
                 $colorStmt->execute([$product['id']]);
                 $product['colors'] = $colorStmt->fetchAll();
                 
-                // Get images
-                $imageStmt = $db->prepare("SELECT * FROM product_images WHERE product_id = ? ORDER BY display_order ASC");
+                // Get images - map column names to match frontend expectations
+                $imageStmt = $db->prepare("SELECT id, product_id, image_url as url, alt_text, display_order, is_primary FROM product_images WHERE product_id = ? ORDER BY display_order ASC");
                 $imageStmt->execute([$product['id']]);
                 $product['images'] = $imageStmt->fetchAll();
                 
@@ -145,7 +158,7 @@ try {
                 
                 // Insert colors if provided
                 if (!empty($data['colors']) && is_array($data['colors'])) {
-                    $colorSql = "INSERT INTO product_colors (product_id, name, code) VALUES (?, ?, ?)";
+                    $colorSql = "INSERT INTO product_colors (product_id, color_name, color_code) VALUES (?, ?, ?)";
                     $colorStmt = $db->prepare($colorSql);
                     
                     foreach ($data['colors'] as $color) {
@@ -157,7 +170,7 @@ try {
                 
                 // Insert images if provided
                 if (!empty($data['images']) && is_array($data['images'])) {
-                    $imageSql = "INSERT INTO product_images (product_id, url, alt_text, display_order) VALUES (?, ?, ?, ?)";
+                    $imageSql = "INSERT INTO product_images (product_id, image_url, alt_text, display_order) VALUES (?, ?, ?, ?)";
                     $imageStmt = $db->prepare($imageSql);
                     
                     foreach ($data['images'] as $index => $image) {
@@ -185,13 +198,13 @@ try {
                 $stmt->execute([$productId]);
                 $product = $stmt->fetch();
                 
-                // Get colors
-                $colorStmt = $db->prepare("SELECT * FROM product_colors WHERE product_id = ?");
+                // Get colors - map column names
+                $colorStmt = $db->prepare("SELECT id, product_id, color_name as name, color_code as code, stock FROM product_colors WHERE product_id = ?");
                 $colorStmt->execute([$productId]);
                 $product['colors'] = $colorStmt->fetchAll();
                 
-                // Get images
-                $imageStmt = $db->prepare("SELECT * FROM product_images WHERE product_id = ? ORDER BY display_order ASC");
+                // Get images - map column names
+                $imageStmt = $db->prepare("SELECT id, product_id, image_url as url, alt_text, display_order, is_primary FROM product_images WHERE product_id = ? ORDER BY display_order ASC");
                 $imageStmt->execute([$productId]);
                 $product['images'] = $imageStmt->fetchAll();
                 
@@ -248,11 +261,44 @@ try {
                     $data['id']
                 ]);
                 
+                // Update images - get old images first to delete physical files
+                if (isset($data['images'])) {
+                    // Get existing images
+                    $oldImagesStmt = $db->prepare("SELECT image_url FROM product_images WHERE product_id = ?");
+                    $oldImagesStmt->execute([$data['id']]);
+                    $oldImages = $oldImagesStmt->fetchAll();
+                    
+                    // Delete old physical files
+                    foreach ($oldImages as $oldImage) {
+                        deleteImageFile($oldImage['image_url']);
+                    }
+                    
+                    // Delete old image records
+                    $db->prepare("DELETE FROM product_images WHERE product_id = ?")->execute([$data['id']]);
+                    
+                    // Insert new images
+                    if (!empty($data['images']) && is_array($data['images'])) {
+                        $imageSql = "INSERT INTO product_images (product_id, image_url, alt_text, display_order) VALUES (?, ?, ?, ?)";
+                        $imageStmt = $db->prepare($imageSql);
+                        
+                        foreach ($data['images'] as $index => $image) {
+                            if (!empty($image['url'])) {
+                                $imageStmt->execute([
+                                    $data['id'],
+                                    $image['url'],
+                                    $image['alt_text'] ?? '',
+                                    $index
+                                ]);
+                            }
+                        }
+                    }
+                }
+                
                 // Update colors - delete all and re-insert
                 $db->prepare("DELETE FROM product_colors WHERE product_id = ?")->execute([$data['id']]);
                 
                 if (!empty($data['colors']) && is_array($data['colors'])) {
-                    $colorSql = "INSERT INTO product_colors (product_id, name, code) VALUES (?, ?, ?)";
+                    $colorSql = "INSERT INTO product_colors (product_id, color_name, color_code) VALUES (?, ?, ?)";
                     $colorStmt = $db->prepare($colorSql);
                     
                     foreach ($data['colors'] as $color) {
@@ -285,10 +331,20 @@ try {
             $db->beginTransaction();
             
             try {
+                // Get all image paths before deleting
+                $imageStmt = $db->prepare("SELECT image_url FROM product_images WHERE product_id = ?");
+                $imageStmt->execute([$data['id']]);
+                $images = $imageStmt->fetchAll();
+                
+                // Delete physical image files
+                foreach ($images as $image) {
+                    deleteImageFile($image['image_url']);
+                }
+                
                 // Delete colors
                 $db->prepare("DELETE FROM product_colors WHERE product_id = ?")->execute([$data['id']]);
                 
-                // Delete images
+                // Delete images from database
                 $db->prepare("DELETE FROM product_images WHERE product_id = ?")->execute([$data['id']]);
                 
                 // Delete product
