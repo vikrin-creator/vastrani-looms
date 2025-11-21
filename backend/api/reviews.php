@@ -35,19 +35,30 @@ try {
                 
                 $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 
+                // Calculate avg_rating and review_count
+                $avgRating = 0;
+                $reviewCount = count($reviews);
+                
                 // Format dates and rating
                 foreach ($reviews as &$review) {
                     $review['rating'] = floatval($review['rating']);
-                    $review['avg_rating'] = $review['avg_rating'] ? round(floatval($review['avg_rating']), 1) : 0;
-                    $review['review_count'] = intval($review['review_count']);
+                    if (isset($review['avg_rating'])) {
+                        $avgRating = $review['avg_rating'] ? round(floatval($review['avg_rating']), 1) : 0;
+                    }
+                    if (isset($review['review_count'])) {
+                        $reviewCount = intval($review['review_count']);
+                    }
                     $review['created_at'] = date('F j, Y', strtotime($review['created_at']));
+                    // Remove these from individual reviews to avoid confusion
+                    unset($review['avg_rating']);
+                    unset($review['review_count']);
                 }
                 
                 echo json_encode([
                     'success' => true,
                     'reviews' => $reviews,
-                    'avg_rating' => $reviews[0]['avg_rating'] ?? 0,
-                    'review_count' => $reviews[0]['review_count'] ?? 0
+                    'avg_rating' => $avgRating,
+                    'review_count' => $reviewCount
                 ]);
                 
             } else if (isset($_GET['id'])) {
