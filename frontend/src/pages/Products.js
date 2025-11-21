@@ -178,7 +178,7 @@ const Products = () => {
                   className="bg-cover bg-center aspect-[4/3] transition-transform duration-300 group-hover:scale-105" 
                   style={{ 
                     backgroundImage: product.images && product.images.length > 0 
-                      ? `url('https://seashell-yak-534067.hostingersite.com/${product.images[0].url}')` 
+                      ? `url('https://seashell-yak-534067.hostingersite.com/${product.images[0].url.replace('backend/', '')}')` 
                       : 'linear-gradient(135deg, #F5E6D3 0%, #D4AF37 100%)'
                   }}
                 ></div>

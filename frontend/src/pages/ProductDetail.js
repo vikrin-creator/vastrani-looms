@@ -103,7 +103,7 @@ const ProductDetail = () => {
             <img
               alt={product.name}
               className="w-full h-full object-cover aspect-[7/6] hover:scale-105 transition-transform duration-500 cursor-zoom-in"
-              src={product.images && product.images[selectedImage] ? `https://seashell-yak-534067.hostingersite.com/${product.images[selectedImage].url}` : '/placeholder.jpg'}
+              src={product.images && product.images[selectedImage] ? `https://seashell-yak-534067.hostingersite.com/${product.images[selectedImage].url.replace('backend/', '')}` : '/placeholder.jpg'}
             />
           </div>
           {product.images && product.images.length > 1 && (
@@ -119,7 +119,7 @@ const ProductDetail = () => {
                   <img
                     alt={`${product.name} - ${index + 1}`}
                     className="w-full h-full object-cover aspect-square"
-                    src={`https://seashell-yak-534067.hostingersite.com/${image.url}`}
+                    src={`https://seashell-yak-534067.hostingersite.com/${image.url.replace('backend/', '')}`}
                   />
                 </div>
               ))}
@@ -254,7 +254,7 @@ const ProductDetail = () => {
                 <div
                   className="w-full bg-cover bg-center rounded-lg shadow-md overflow-hidden"
                   style={{
-                    backgroundImage: `url('${relatedProduct.images && relatedProduct.images[0] ? `https://seashell-yak-534067.hostingersite.com/${relatedProduct.images[0].url}` : '/placeholder.jpg'}')`
+                    backgroundImage: `url('${relatedProduct.images && relatedProduct.images[0] ? `https://seashell-yak-534067.hostingersite.com/${relatedProduct.images[0].url.replace('backend/', '')}` : '/placeholder.jpg'}')`
                   }}
                 >
                   <div className="w-full aspect-[4/5]"></div>
